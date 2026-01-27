@@ -2072,8 +2072,9 @@ v1.0.0 (2026-01-26)
             showNotification(`✨ НЕВЕРОЯТНО! Вы получили эксклюзивного рабочего: ${exclusive.name}!`, 'success');
             playSound('workerGetSound', 1.2);
             
-            // Обновляем интерфейс
+            // Обновляем интерфейсы
             renderWorkers();
+            renderUpgrades();
             renderRocketWorkers();
             updatePassiveIncome();
             updateStats();
@@ -2986,6 +2987,7 @@ v1.0.0 (2026-01-26)
                 
                 playSound('workerGetSound');
                 renderWorkers();
+                renderUpgrades();
                 renderRocketWorkers();
                 updatePassiveIncome();
                 updateStats();
@@ -3153,6 +3155,7 @@ v1.0.0 (2026-01-26)
                     };
                     gameData.workers.push(newWorker);
                     renderWorkers();
+                    renderUpgrades();
                     updatePassiveIncome();
                     showNotification(`Получен рабочий: ${winnerReward.name}!`, 'success');
                 }
@@ -3300,7 +3303,8 @@ v1.0.0 (2026-01-26)
             const listContainer = document.getElementById('workersUpgradeList');
             const detailsContainer = document.getElementById('upgradeDetails');
             
-            if (gameData.workers.length === 0) {
+            // Проверяем есть ли рабочие вообще
+            if (!gameData.workers || gameData.workers.length === 0) {
                 listContainer.innerHTML = '';
                 detailsContainer.innerHTML = `
                     <div class="empty-state">
@@ -3339,32 +3343,40 @@ v1.0.0 (2026-01-26)
                 return b.income - a.income;
             });
             
-            sortedWorkers.forEach((worker, index) => {
+            sortedWorkers.forEach(worker => {
                 const experiencePercent = worker.maxExperience > 0 ? Math.min((worker.experience / worker.maxExperience) * 100, 100) : 100;
-                const listItem = document.createElement('div');
-                listItem.className = `worker-list-item ${selectedWorker && selectedWorker.id === worker.id ? 'active' : ''}`;
-                listItem.onclick = () => {
+                const upgradeCost = calculateUpgradeCost(worker);
+                
+                const workerItem = document.createElement('div');
+                workerItem.className = 'worker-list-item';
+                workerItem.onclick = () => {
                     playSound('clickSound');
                     selectWorkerForUpgrade(worker);
                 };
-                listItem.innerHTML = `
-                    <div class="worker-list-icon">${worker.icon}</div>
-                    <div class="worker-list-info">
-                        <div class="worker-list-name">${worker.name}</div>
-                        <div class="worker-list-details">
+                
+                workerItem.innerHTML = `
+                    <div class="worker-item-avatar">${worker.icon}</div>
+                    <div class="worker-item-info">
+                        <div class="worker-item-name">${worker.name}</div>
+                        <div class="worker-item-stats">
                             <span>Ур. ${worker.level}</span>
-                            <span>${worker.income}/сек</span>
-                            <span class="worker-rarity ${worker.rarity}">${worker.rarity}</span>
+                            <span>•</span>
+                            <span>${formatNumber(worker.income)}/сек</span>
                         </div>
                     </div>
-                    <div style="font-size: 14px; font-weight: 600; color: ${worker.isRare ? '#8B5CF6' : '#10B981'}">
-                        ${worker.isRare || worker.isSpecial ? 'Особый' : Math.floor(experiencePercent) + '%'}
+                    <div class="worker-item-progress">
+                        <div class="progress-bar-small">
+                            <div class="progress-fill-small" style="width: ${experiencePercent}%"></div>
+                        </div>
+                        <span class="progress-text">${Math.floor(experiencePercent)}%</span>
                     </div>
                 `;
-                listContainer.appendChild(listItem);
+                
+                listContainer.appendChild(workerItem);
             });
             
-            if (!selectedWorker && gameData.workers.length > 0) {
+            // Автовыбор первого рабочего
+            if (sortedWorkers.length > 0) {
                 selectWorkerForUpgrade(sortedWorkers[0]);
             } else if (selectedWorker) {
                 updateUpgradeDetails(selectedWorker);
@@ -3992,6 +4004,7 @@ v1.0.0 (2026-01-26)
                         };
                         gameData.workers.push(newWorker);
                         renderWorkers();
+                        renderUpgrades();
                         renderRocketWorkers();
                         updatePassiveIncome();
                         showNotification(`Добавлен рабочий: ${workerInfo.name} (${rarity})!`, 'success');
