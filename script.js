@@ -613,15 +613,25 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
-            function draw() {
+            let lastTime = 0;
+            const targetFPS = 30; // Уменьшаем FPS для оптимизации
+            const frameInterval = 1000 / targetFPS;
+            
+            function draw(currentTime) {
                 animationId = requestAnimationFrame(draw);
+                
+                // Ограничиваем FPS
+                if (currentTime - lastTime < frameInterval) {
+                    return;
+                }
+                lastTime = currentTime;
                 
                 if (!analyser) return;
                 
                 analyser.getByteFrequencyData(dataArray);
                 
                 // Очистка canvas с эффектом следа
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 switch(visualizerStyle) {
@@ -640,7 +650,7 @@
                 }
             }
             
-            draw();
+            draw(0);
         }
 
         function drawBars(ctx, canvas) {
@@ -3059,29 +3069,48 @@ v1.0.0 (2026-01-26)
         // Переключение вкладок
         function switchTab(tabName) {
             playSound('clickSound');
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
-            document.getElementById(`${tabName}-tab`).classList.add('active');
+            // Кэшируем элементы для оптимизации
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
             
-            if (tabName === 'workers') {
-                renderWorkers();
-            } else if (tabName === 'upgrades') {
-                renderUpgrades();
-            } else if (tabName === 'rocket') {
-                renderRocketWorkers();
-                updateRocketStats();
-            } else if (tabName === 'city') {
-                renderCity();
-                renderAvailableBuildings();
-            } else if (tabName === 'leaderboard') {
-                updateLeaderboard();
-            } else if (tabName === 'stats') {
-                updateStats();
-            } else if (tabName === 'pvp') {
-                renderPvpWorkers();
-                updateStamina();
+            // Быстрое удаление классов
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Добавляем активные классы
+            const activeTab = document.querySelector(`.tab[onclick*="${tabName}"]`);
+            const activeContent = document.getElementById(`${tabName}-tab`);
+            
+            if (activeTab) activeTab.classList.add('active');
+            if (activeContent) activeContent.classList.add('active');
+            
+            // Оптимизированный рендеринг содержимого
+            switch(tabName) {
+                case 'workers':
+                    renderWorkers();
+                    break;
+                case 'upgrades':
+                    renderUpgrades();
+                    break;
+                case 'rocket':
+                    renderRocketWorkers();
+                    updateRocketStats();
+                    break;
+                case 'city':
+                    renderCity();
+                    renderAvailableBuildings();
+                    break;
+                case 'leaderboard':
+                    updateLeaderboard();
+                    break;
+                case 'stats':
+                    updateStats();
+                    break;
+                case 'pvp':
+                    renderPvpWorkers();
+                    updateStamina();
+                    break;
             }
         }
 
@@ -4572,12 +4601,8 @@ v1.0.0 (2026-01-26)
             const listContainer = document.getElementById('workersUpgradeList');
             const detailsContainer = document.getElementById('upgradeDetails');
             
-            // Отладочная информация
-            console.log('renderUpgrades called, workers:', gameData.workers ? gameData.workers.length : 'undefined');
-            
-            // Проверяем есть ли рабочие вообще
-            if (!gameData.workers || !Array.isArray(gameData.workers) || gameData.workers.length === 0) {
-                console.log('No workers found, showing empty state');
+            // Быстрая проверка без лишних операций
+            if (!gameData.workers || gameData.workers.length === 0) {
                 listContainer.innerHTML = '';
                 detailsContainer.innerHTML = `
                     <div class="empty-state">
@@ -4593,23 +4618,15 @@ v1.0.0 (2026-01-26)
                 return;
             }
             
-            console.log('Rendering', gameData.workers.length, 'workers');
-            
+            // Очищаем контейнер один раз
             listContainer.innerHTML = '';
             
-            const sortedWorkers = [...gameData.workers].sort((a, b) => {
+            // Оптимизированная сортировка
+            const sortedWorkers = gameData.workers.slice().sort((a, b) => {
                 const rarityOrder = { 
-                    'exclusive': 11,
-                    'beta-tester': 10,
-                    'ultimate': 9, 
-                    'divine': 8, 
-                    'exotic': 7, 
-                    'mythic': 6, 
-                    'cosmic': 5, 
-                    'legendary': 4, 
-                    'epic': 3, 
-                    'rare': 2, 
-                    'common': 1 
+                    'exclusive': 11, 'beta-tester': 10, 'ultimate': 9, 'divine': 8, 
+                    'exotic': 7, 'mythic': 6, 'cosmic': 5, 'legendary': 4, 
+                    'epic': 3, 'rare': 2, 'common': 1 
                 };
                 const aRarity = rarityOrder[a.rarity] || 0;
                 const bRarity = rarityOrder[b.rarity] || 0;
@@ -4618,16 +4635,17 @@ v1.0.0 (2026-01-26)
                 return b.income - a.income;
             });
             
-            sortedWorkers.forEach((worker, index) => {
-                console.log(`Rendering worker ${index}:`, worker.name, worker.id);
-                
-                const experiencePercent = worker.maxExperience > 0 ? Math.min((worker.experience / worker.maxExperience) * 100, 100) : 100;
+            // Оптимизированный рендеринг с DocumentFragment
+            const fragment = document.createDocumentFragment();
+            
+            sortedWorkers.forEach(worker => {
+                const experiencePercent = worker.maxExperience > 0 ? 
+                    Math.min((worker.experience / worker.maxExperience) * 100, 100) : 100;
                 const upgradeCost = calculateUpgradeCost(worker);
                 
                 const workerItem = document.createElement('div');
                 workerItem.className = 'worker-list-item';
                 workerItem.onclick = () => {
-                    console.log('Worker clicked:', worker.name, worker.id);
                     playSound('clickSound');
                     selectWorkerForUpgrade(worker);
                 };
@@ -4643,18 +4661,22 @@ v1.0.0 (2026-01-26)
                         </div>
                     </div>
                     <div class="worker-item-progress">
-                        <div class="progress-bar-small">
-                            <div class="progress-fill-small" style="width: ${experiencePercent}%"></div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${experiencePercent}%"></div>
                         </div>
-                        <span class="progress-text">${Math.floor(experiencePercent)}%</span>
+                        <div class="upgrade-cost">
+                            <span>💰 ${formatNumber(upgradeCost)}</span>
+                        </div>
                     </div>
                 `;
                 
-                listContainer.appendChild(workerItem);
+                fragment.appendChild(workerItem);
             });
             
+            listContainer.appendChild(fragment);
+            
             // Автовыбор первого рабочего
-            if (sortedWorkers.length > 0) {
+            if (sortedWorkers.length > 0 && !selectedWorker) {
                 selectWorkerForUpgrade(sortedWorkers[0]);
             } else if (selectedWorker) {
                 updateUpgradeDetails(selectedWorker);
@@ -4663,22 +4685,14 @@ v1.0.0 (2026-01-26)
 
         // Выбрать рабочего для улучшения
         function selectWorkerForUpgrade(worker, event) {
-            console.log('selectWorkerForUpgrade called with:', worker);
-            
-            if (!worker) {
-                console.error('No worker provided to selectWorkerForUpgrade');
-                return;
-            }
+            if (!worker) return;
             
             selectedWorker = worker;
-            console.log('selectedWorker set to:', selectedWorker.name, selectedWorker.id);
             
             // Переключаемся на вкладку улучшений
-            console.log('Switching to upgrades tab');
             switchTab('upgrades');
             
             // Обновляем детали улучшения
-            console.log('Updating upgrade details');
             updateUpgradeDetails(worker);
         }
 
@@ -5137,6 +5151,19 @@ v1.0.0 (2026-01-26)
                                 wins: 0,
                                 losses: 0
                             };
+                            
+                            // Восстанавливаем рабочих если они пропали
+                            if (!gameData.workers || !Array.isArray(gameData.workers)) {
+                                console.log('Workers array corrupted, creating default workers');
+                                gameData.workers = [];
+                                // Добавляем базовых рабочих
+                                const defaultWorkers = [
+                                    { name: 'Барсик', icon: '🐱', income: 10, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 1 },
+                                    { name: 'Бензин', icon: '⛽', income: 15, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 2 }
+                                ];
+                                gameData.workers.push(...defaultWorkers);
+                                showNotification('🔧 Рабочие восстановлены после ошибки!', 'warning');
+                            }
                             
                             document.getElementById('playerNameDisplay').textContent = gameData.playerName;
                             updateBalance();
