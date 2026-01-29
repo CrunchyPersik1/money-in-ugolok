@@ -3141,10 +3141,11 @@ body::before {
 /* Кнопка магазина */
 .shop-button-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 999;
+    z-index: 1001;
+    border: 3px solid red !important; /* Временная рамка для отладки */
 }
 
 .shop-button {
@@ -3159,6 +3160,7 @@ body::before {
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
     animation: shop-pulse 3s infinite;
+    border: 2px solid yellow !important; /* Временная рамка для отладки */
 }
 
 .shop-button:hover {
