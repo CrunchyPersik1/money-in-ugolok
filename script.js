@@ -635,57 +635,159 @@
                 analyser.getByteFrequencyData(dataArray);
                 
                 // Очистка canvas с эффектом следа
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                switch(visualizerStyle) {
-                    case 'bars':
-                        drawBars(ctx, canvas);
-                        break;
-                    case 'wave':
-                        drawWave(ctx, canvas);
-                        break;
-                    case 'circular':
-                        drawCircular(ctx, canvas);
-                        break;
-                    case 'particles':
-                        drawParticles(ctx, canvas);
-                        break;
-                }
-            }
-            
-            draw(0);
-        }
 
-        function drawBars(ctx, canvas) {
-            const barWidth = (canvas.width / dataArray.length) * 2.5;
-            let x = 0;
-            
-            for (let i = 0; i < dataArray.length; i++) {
-                const barHeight = (dataArray[i] / 255) * canvas.height * 0.7;
-                
-                // Градиент для полос
-                const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
-                gradient.addColorStop(0, `hsl(${i * 360 / dataArray.length}, 100%, 50%)`);
-                gradient.addColorStop(1, `hsl(${i * 360 / dataArray.length}, 100%, 30%)`);
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                
-                x += barWidth + 1;
-            }
-        }
+function startVisualizer() {
+    if (!visualizerRunning) {
+        visualizerRunning = true;
+        drawVisualizer();
+    }
+}
 
-        function drawWave(ctx, canvas) {
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+function drawVisualizer() {
+    if (!visualizerRunning) return;
+    
+    requestAnimationFrame(drawVisualizer);
+    
+    const canvas = document.getElementById('visualizerCanvas');
+    if (!canvas || !audioContext || !analyser) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Уменьшаем FPS для производительности
+    if (!visualizerFrameCount) visualizerFrameCount = 0;
+    if (visualizerFrameCount++ % 2 !== 0) return; // Пропускаем каждый второй кадр
+    
+    // Проверяем видимость canvas
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    analyser.getByteFrequencyData(dataArray);
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i] * 2;
+        
+        const r = barHeight + (25 * (i / bufferLength));
+        const g = 250 * (i / bufferLength);
+        const b = 50;
+        
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+        
+        x += barWidth + 1;
+    }
+}
+
+function drawBars(ctx, canvas) {
+    const barWidth = (canvas.width / dataArray.length) * 2.5;
+    let x = 0;
+    
+    for (let i = 0; i < dataArray.length; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height * 0.7;
+        
+        // Градиент для полос
+        const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+        gradient.addColorStop(0, `hsl(${i * 360 / dataArray.length}, 100%, 50%)`);
+        gradient.addColorStop(1, `hsl(${i * 360 / dataArray.length}, 100%, 30%)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        
+        x += barWidth + 1;
+    }
+}
+
+function drawWave(ctx, canvas) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+    ctx.beginPath();
+    
+    const sliceWidth = canvas.width / dataArray.length;
+    let x = 0;
+    
+    for (let i = 0; i < dataArray.length; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+        
+        x += sliceWidth;
+    }
+    
+    ctx.stroke();
+}
+
+function drawCircular(ctx, canvas) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 50;
+    
+    for (let i = 0; i < dataArray.length; i++) {
+        const angle = (i / dataArray.length) * Math.PI * 2;
+        const barHeight = (dataArray[i] / 255) * radius;
+        
+        const x1 = centerX + Math.cos(angle) * radius;
+        const y1 = centerY + Math.sin(angle) * radius;
+        const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+        const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+        
+        ctx.strokeStyle = `hsl(${i * 360 / dataArray.length}, 100%, 50%)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+}
+
+function drawParticles(ctx, canvas) {
+    // Создаем новые частицы на основе аудио
+    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+    
+    if (average > 50 && particles.length < 100) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height,
+            vx: (Math.random() - 0.5) * 4,
+            vy: -Math.random() * 10 - 5,
+            size: Math.random() * 5 + 2,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+            life: 1
+        });
+    }
+    
+    // Обновляем и рисуем частицы
+    particles = particles.filter(particle => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.2; // гравитация
+        particle.life -= 0.01;
+        
+        if (particle.life > 0) {
+            ctx.globalAlpha = particle.life;
+            ctx.fillStyle = particle.color;
             ctx.beginPath();
-            
-            const sliceWidth = canvas.width / dataArray.length;
-            let x = 0;
-            
-            for (let i = 0; i < dataArray.length; i++) {
-                const v = dataArray[i] / 128.0;
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            return true;
+        }
+        return false;
+    });
+}
                 const y = v * canvas.height / 2;
                 
                 if (i === 0) {
@@ -2149,9 +2251,6 @@ v1.0.0 (2026-01-26)
             const container = document.getElementById('shopScrollContainer');
             container.innerHTML = '';
             
-            console.log('Rendering shop items...');
-            console.log('Shop items:', shopItems);
-            
             // Добавляем тестовый товар для проверки
             const testItem = document.createElement('div');
             testItem.className = 'shop-item deal';
@@ -2179,8 +2278,6 @@ v1.0.0 (2026-01-26)
             ];
             
             categories.forEach(category => {
-                console.log(`Rendering category: ${category.key}`);
-                
                 // Добавляем заголовок категории
                 const categoryHeader = document.createElement('div');
                 categoryHeader.className = 'shop-category-header';
@@ -2189,21 +2286,49 @@ v1.0.0 (2026-01-26)
                 
                 // Добавляем товары категории
                 const items = shopItems[category.key] || [];
-                console.log(`Items in ${category.key}:`, items.length);
                 
                 items.forEach(item => {
                     // Проверяем не куплен ли товар
                     if (!gameData.shop.purchasedItems.includes(item.id)) {
-                        console.log(`Adding item: ${item.title}`);
                         const shopItem = createShopItemElement(item);
                         container.appendChild(shopItem);
-                    } else {
-                        console.log(`Item already purchased: ${item.id}`);
                     }
                 });
             });
             
-            console.log('Shop rendering complete');
+            // Добавляем перетаскивание мышкой
+            setupShopDragging(container);
+        }
+
+        function setupShopDragging(container) {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            container.addEventListener('mousedown', (e) => {
+                isDown = true;
+                container.classList.add('dragging');
+                startX = e.pageX - container.offsetLeft;
+                scrollLeft = container.scrollLeft;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const walk = (x - startX) * 2;
+                container.scrollLeft = scrollLeft - walk;
+            });
         }
 
         function createShopItemElement(item) {
@@ -5549,13 +5674,26 @@ v1.0.0 (2026-01-26)
         }
 
         // Пассивный доход
+        let lastGameUpdate = 0;
         function startPassiveIncome() {
             setInterval(() => {
-                const income = (Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND)) / 10;
-                gameData.balance += income;
-                gameData.totalEarned += income;
+                const now = Date.now();
+                if (now - lastGameUpdate < 50) return; // Обновляем не чаще 20 раз в секунду
+                lastGameUpdate = now;
+                
+                // Обновляем баланс с учетом бонусов
+                const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
+                gameData.balance += totalWithBonus / 20; // Делим на 20 так как обновляем 20 раз в секунду
+                
+                // Обновляем UI только если нужно
                 updateBalance();
-            }, 100);
+                updateIncomePerSecond();
+                
+                // Сохраняем игру реже
+                if (Math.random() < 0.01) { // 1% шанс каждое обновление
+                    saveGame();
+                }
+            }, 50); // 20 FPS вместо 1000 для производительности
         }
 
         // Обновление пассивного дохода
@@ -5610,7 +5748,13 @@ v1.0.0 (2026-01-26)
         }
 
         // Обновление баланса
+        // Оптимизированное обновление баланса
+        let lastBalanceUpdate = 0;
         function updateBalance() {
+            const now = Date.now();
+            if (now - lastBalanceUpdate < 100) return; // Обновляем не чаще чем раз в 100мс
+            lastBalanceUpdate = now;
+            
             document.getElementById('balance').textContent = formatNumber(Math.floor(gameData.balance));
             
             // Обновляем иконку если настроена
