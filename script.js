@@ -2149,6 +2149,27 @@ v1.0.0 (2026-01-26)
             const container = document.getElementById('shopScrollContainer');
             container.innerHTML = '';
             
+            console.log('Rendering shop items...');
+            console.log('Shop items:', shopItems);
+            
+            // Добавляем тестовый товар для проверки
+            const testItem = document.createElement('div');
+            testItem.className = 'shop-item deal';
+            testItem.innerHTML = `
+                <div class="shop-item-header">
+                    <div class="shop-item-title">ТЕСТОВЫЙ ТОВАР</div>
+                    <div class="shop-item-badge">ТЕСТ</div>
+                </div>
+                <div class="shop-item-description">Это тестовый товар для проверки магазина</div>
+                <div class="shop-item-price">
+                    <span>100 💰</span>
+                </div>
+                <button class="shop-item-button" onclick="alert('Магазин работает!')">
+                    ТЕСТ
+                </button>
+            `;
+            container.appendChild(testItem);
+            
             // Добавляем разделители категорий
             const categories = [
                 { key: 'deals', title: '🔥 ГОРЯЧИЕ АКЦИИ', type: 'deal' },
@@ -2158,6 +2179,8 @@ v1.0.0 (2026-01-26)
             ];
             
             categories.forEach(category => {
+                console.log(`Rendering category: ${category.key}`);
+                
                 // Добавляем заголовок категории
                 const categoryHeader = document.createElement('div');
                 categoryHeader.className = 'shop-category-header';
@@ -2166,14 +2189,21 @@ v1.0.0 (2026-01-26)
                 
                 // Добавляем товары категории
                 const items = shopItems[category.key] || [];
+                console.log(`Items in ${category.key}:`, items.length);
+                
                 items.forEach(item => {
                     // Проверяем не куплен ли товар
                     if (!gameData.shop.purchasedItems.includes(item.id)) {
+                        console.log(`Adding item: ${item.title}`);
                         const shopItem = createShopItemElement(item);
                         container.appendChild(shopItem);
+                    } else {
+                        console.log(`Item already purchased: ${item.id}`);
                     }
                 });
             });
+            
+            console.log('Shop rendering complete');
         }
 
         function createShopItemElement(item) {

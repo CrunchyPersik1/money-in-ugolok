@@ -3142,10 +3142,9 @@ body::before {
 .shop-button-container {
     position: fixed;
     top: 50%;
-    right: 40px;
+    right: 20px;
     transform: translateY(-50%);
     z-index: 1001;
-    border: 3px solid red !important; /* Временная рамка для отладки */
 }
 
 .shop-button {
@@ -3161,9 +3160,10 @@ body::before {
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
     animation: shop-pulse 3s infinite;
-    border: 2px solid yellow !important; /* Временная рамка для отладки */
     writing-mode: vertical-rl;
     text-orientation: mixed;
+    min-height: 120px;
+    min-width: 50px;
 }
 
 .shop-button:hover {
