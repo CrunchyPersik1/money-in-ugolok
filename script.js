@@ -1705,8 +1705,29 @@
         }
         
         // Система обновлений
-        const GAME_VERSION = "1.0.0";
+        const GAME_VERSION = "1.1.0";
         const UPDATE_LOG = `
+v1.1.0 (30.01.2026)
+🎵 МУЗЫКАЛЬНЫЙ ПЛЕЕР С ВИЗУАЛИЗАТОРОМ
+✨ Добавлен полноценный аудиоплеер с Web Audio API
+🎨 4 режима визуализации: полосы, волна, круговой, частицы
+📁 Автопоиск музыки из папки /music
+🎛️ Боковая скрывающаяся панель управления
+⏱️ Прогресс-бар с возможностью перемотки
+🔊 Регулировка громкости с отображением процентов
+
+⚔️ PvP СИСТЕМА УЛУЧШЕНА
+🐛 Исправлен баг с блокировкой хода бота
+🎭 Заменены боты на реальных рабочих (Барсик, Бензин, Астрал, Дракон, Мондея)
+🪟 Битвы теперь в отдельном модальном окне
+🎨 Улучшен интерфейс PvP арены
+
+🔧 ИСПРАВЛЕНИЯ И УЛУЧШЕНИЯ
+🐛 Исправлен баг с выбором рабочих для улучшений
+🛡️ Усилена защита системы сохранений
+📱 Улучшена адаптивность для мобильных устройств
+🧹 Оптимизирован код и удалены ненужные файлы
+
 v1.0.0 (2026-01-26)
 🎉 Запуск Digital Luxury редизайна
 💎 Новый премиальный интерфейс с неоновыми эффектами
@@ -4551,8 +4572,12 @@ v1.0.0 (2026-01-26)
             const listContainer = document.getElementById('workersUpgradeList');
             const detailsContainer = document.getElementById('upgradeDetails');
             
+            // Отладочная информация
+            console.log('renderUpgrades called, workers:', gameData.workers ? gameData.workers.length : 'undefined');
+            
             // Проверяем есть ли рабочие вообще
-            if (!gameData.workers || gameData.workers.length === 0) {
+            if (!gameData.workers || !Array.isArray(gameData.workers) || gameData.workers.length === 0) {
+                console.log('No workers found, showing empty state');
                 listContainer.innerHTML = '';
                 detailsContainer.innerHTML = `
                     <div class="empty-state">
@@ -4567,6 +4592,8 @@ v1.0.0 (2026-01-26)
                 `;
                 return;
             }
+            
+            console.log('Rendering', gameData.workers.length, 'workers');
             
             listContainer.innerHTML = '';
             
@@ -4591,13 +4618,16 @@ v1.0.0 (2026-01-26)
                 return b.income - a.income;
             });
             
-            sortedWorkers.forEach(worker => {
+            sortedWorkers.forEach((worker, index) => {
+                console.log(`Rendering worker ${index}:`, worker.name, worker.id);
+                
                 const experiencePercent = worker.maxExperience > 0 ? Math.min((worker.experience / worker.maxExperience) * 100, 100) : 100;
                 const upgradeCost = calculateUpgradeCost(worker);
                 
                 const workerItem = document.createElement('div');
                 workerItem.className = 'worker-list-item';
                 workerItem.onclick = () => {
+                    console.log('Worker clicked:', worker.name, worker.id);
                     playSound('clickSound');
                     selectWorkerForUpgrade(worker);
                 };
@@ -4633,12 +4663,22 @@ v1.0.0 (2026-01-26)
 
         // Выбрать рабочего для улучшения
         function selectWorkerForUpgrade(worker, event) {
+            console.log('selectWorkerForUpgrade called with:', worker);
+            
+            if (!worker) {
+                console.error('No worker provided to selectWorkerForUpgrade');
+                return;
+            }
+            
             selectedWorker = worker;
+            console.log('selectedWorker set to:', selectedWorker.name, selectedWorker.id);
             
             // Переключаемся на вкладку улучшений
+            console.log('Switching to upgrades tab');
             switchTab('upgrades');
             
             // Обновляем детали улучшения
+            console.log('Updating upgrade details');
             updateUpgradeDetails(worker);
         }
 
