@@ -286,26 +286,16 @@ body::before {
 
 .player-info {
     display: flex;
-    align-items: center;
-    gap: 2rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
 }
 
-.player-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.balance {
+.balance-container {
     display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--neon-gold);
-    background: var(--gradient-gold);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
     background-clip: text;
 }
 
@@ -2604,20 +2594,33 @@ body::before {
     color: var(--text-secondary);
 }
 
-.selected-badge {
+.pvp-worker-card .selected-badge {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: var(--neon-cyan);
+    top: 10px;
+    right: 10px;
+    background: var(--neon-green);
     color: var(--bg-dark);
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 1.2rem;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+.pvp-worker-card.selected {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 255, 0, 0.3);
+}
+
+.pvp-worker-card.selected:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 255, 0, 0.4);
 }
 
 /* PvP арена */
@@ -3074,6 +3077,54 @@ body::before {
     border-bottom: none;
 }
 
+/* Кнопка начала битвы */
+.battle-start-container {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.battle-start-btn {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse-glow 2s infinite;
+}
+
+.battle-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 255, 255, 0.5);
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+}
+
+.battle-start-btn:active {
+    transform: translateY(0);
+}
+
+.battle-start-btn:disabled {
+    background: gray;
+    cursor: not-allowed;
+    opacity: 0.5;
+    animation: none;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(0, 255, 255, 0.6);
+    }
+}
+
 /* Заблокированная кнопка закрытия */
 .pvp-modal-close.battle-active {
     background: rgba(255, 0, 0, 0.2);
@@ -3085,6 +3136,350 @@ body::before {
 .pvp-modal-close.battle-active:hover {
     background: rgba(255, 0, 0, 0.3);
     transform: none;
+}
+
+/* Кнопка магазина */
+.shop-button-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+}
+
+.shop-button {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+    border: none;
+    border-radius: 20px;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
+    animation: shop-pulse 3s infinite;
+}
+
+.shop-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(255, 0, 255, 0.5);
+}
+
+.shop-icon {
+    font-size: 1.5rem;
+}
+
+.shop-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@keyframes shop-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(255, 0, 255, 0.6);
+    }
+}
+
+/* Модальное окно магазина */
+.shop-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+}
+
+.shop-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-modal-content {
+    background: var(--bg-dark);
+    border: 2px solid var(--neon-pink);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: var(--bg-glass);
+    border-bottom: 1px solid var(--neon-pink);
+}
+
+.shop-title {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--neon-pink);
+}
+
+.shop-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.shop-close:hover {
+    background: rgba(255, 0, 0, 0.2);
+    transform: rotate(90deg);
+}
+
+.shop-balance {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    background: var(--bg-glass);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.balance-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.balance-icon {
+    font-size: 1.5rem;
+}
+
+.balance-amount {
+    color: var(--neon-cyan);
+}
+
+.shop-categories {
+    display: flex;
+    background: var(--bg-glass);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+}
+
+.category-btn {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+}
+
+.category-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.category-btn.active {
+    color: var(--neon-pink);
+    border-bottom-color: var(--neon-pink);
+    background: rgba(255, 0, 255, 0.1);
+}
+
+.shop-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem;
+}
+
+.shop-scroll-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+    height: 100%;
+    align-items: flex-start;
+}
+
+.shop-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.shop-scroll-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.shop-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--neon-pink);
+    border-radius: 4px;
+}
+
+.shop-item {
+    background: var(--bg-glass);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-width: 280px;
+    max-width: 320px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.shop-item:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+}
+
+.shop-item.deal {
+    border-color: var(--neon-pink);
+    background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(255, 0, 255, 0.05));
+}
+
+.shop-item.pvp {
+    border-color: var(--neon-red);
+    background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
+}
+
+.shop-item.worker {
+    border-color: var(--neon-green);
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.05));
+}
+
+.shop-item.shard {
+    border-color: var(--neon-cyan);
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
+}
+
+.shop-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.shop-item-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.shop-item-badge {
+    background: var(--neon-pink);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.shop-item-description {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.shop-item-price {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    margin-bottom: 1rem;
+}
+
+.shop-item-old-price {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.shop-item-button {
+    width: 100%;
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 10px;
+    padding: 0.8rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.shop-item-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-neon);
+}
+
+.shop-item-button:disabled {
+    background: gray;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Адаптивность для магазина */
+@media (max-width: 768px) {
+    .shop-modal-content {
+        width: 95%;
+        height: 90vh;
+    }
+    
+    .shop-header {
+        padding: 1rem;
+    }
+    
+    .shop-title {
+        font-size: 1.4rem;
+    }
+    
+    .shop-balance {
+        padding: 0.8rem 1rem;
+        gap: 1rem;
+    }
+    
+    .balance-item {
+        font-size: 1rem;
+    }
+    
+    .category-btn {
+        padding: 0.8rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .shop-item {
+        min-width: 250px;
+        padding: 1rem;
+    }
 }
 
 /* Аудио визуализатор */

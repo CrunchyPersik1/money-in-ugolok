@@ -101,11 +101,17 @@
                 </div>
             <div class="player-info">
                 <div class="player-name" id="playerNameDisplay">Игрок</div>
-                <div class="balance">
-                    <div class="balance-particles" id="balanceParticles"></div>
-                    <span class="coin-icon" id="balanceIcon">💎</span>
-                    <span id="balance">1,000</span>
-                    <div class="balance-glow" id="balanceGlow"></div>
+                <div class="balance-container">
+                    <div class="balance">
+                        <div class="balance-particles" id="balanceParticles"></div>
+                        <span class="coin-icon" id="balanceIcon">💎</span>
+                        <span id="balance">1,000</span>
+                        <div class="balance-glow" id="balanceGlow"></div>
+                    </div>
+                    <div class="shards-balance">
+                        <span class="shards-icon">💎</span>
+                        <span id="shardsBalance">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -316,6 +322,13 @@
                     <div class="pvp-worker-selection">
                         <div class="selection-title">Выберите рабочего для битвы:</div>
                         <div class="pvp-workers-grid" id="pvpWorkersGrid"></div>
+                        
+                        <!-- Кнопка начала битвы -->
+                        <div class="battle-start-container" id="battleStartContainer" style="display: none;">
+                            <button class="battle-start-btn" id="battleStartBtn" onclick="startSelectedBattle()">
+                                ⚔️ НАЧАТЬ БИТВУ
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="pvp-stats">
@@ -470,6 +483,51 @@
                             <option value="particles">Частицы</option>
                         </select>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка магазина -->
+    <div class="shop-button-container">
+        <button class="shop-button" onclick="openShop()">
+            <div class="shop-icon">🛍️</div>
+            <div class="shop-text">МАГАЗИН</div>
+        </button>
+    </div>
+
+    <!-- Модальное окно магазина -->
+    <div class="shop-modal" id="shopModal">
+        <div class="shop-modal-content">
+            <div class="shop-header">
+                <div class="shop-title">
+                    <span class="shop-icon">🛍️</span>
+                    <span>МАГАЗИН</span>
+                </div>
+                <div class="shop-close" onclick="closeShop()">×</div>
+            </div>
+            
+            <div class="shop-balance">
+                <div class="balance-item">
+                    <span class="balance-icon">💰</span>
+                    <span class="balance-amount" id="shopMoneyBalance">0</span>
+                </div>
+                <div class="balance-item">
+                    <span class="balance-icon">💎</span>
+                    <span class="balance-amount" id="shopShardsBalance">0</span>
+                </div>
+            </div>
+            
+            <div class="shop-categories">
+                <button class="category-btn active" onclick="switchShopCategory('deals')">🔥 АКЦИИ</button>
+                <button class="category-btn" onclick="switchShopCategory('pvp')">⚔️ PvP МЭШАПЫ</button>
+                <button class="category-btn" onclick="switchShopCategory('workers')">👷 РАБОЧИЕ+</button>
+                <button class="category-btn" onclick="switchShopCategory('shards')">💎 ШАРДЫ</button>
+            </div>
+            
+            <div class="shop-content">
+                <div class="shop-scroll-container" id="shopScrollContainer">
+                    <!-- Контент будет генерироваться динамически -->
                 </div>
             </div>
         </div>

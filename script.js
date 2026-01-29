@@ -42,6 +42,10 @@
                 isPlaying: false,
                 visualizerEnabled: true
             },
+            shards: 0, // Новая валюта Шарды
+            shop: {
+                purchasedItems: []
+            },
             achievements: [],
             version: "2.0" // Версия сохранения
         };
@@ -918,6 +922,12 @@
                 const abilities = pvpAbilities[worker.name];
                 const workerCard = document.createElement('div');
                 workerCard.className = 'pvp-worker-card';
+                
+                // Добавляем класс если рабочий выбран
+                if (selectedPvpWorker?.id === worker.id) {
+                    workerCard.classList.add('selected');
+                }
+                
                 workerCard.onclick = () => selectPvpWorker(worker);
                 
                 workerCard.innerHTML = `
@@ -931,7 +941,7 @@
                             <div class="stat">✨ ${abilities.magic}</div>
                         </div>
                     </div>
-                    ${gameData.pvp.selectedWorker?.id === worker.id ? '<div class="selected-badge">✓</div>' : ''}
+                    ${selectedPvpWorker?.id === worker.id ? '<div class="selected-badge">✓</div>' : ''}
                 `;
                 
                 container.appendChild(workerCard);
@@ -945,15 +955,39 @@
                 return;
             }
             
+            selectedPvpWorker = worker;
             gameData.pvp.selectedWorker = worker;
+            
+            // Показываем кнопку начала битвы
+            document.getElementById('battleStartContainer').style.display = 'block';
+            
+            // Обновляем выделение рабочих
             renderPvpWorkers();
             
+            showNotification(`⚔️ Выбран рабочий: ${worker.name}`, 'success');
+        }
+
+        // Начать выбранную битву
+        function startSelectedBattle() {
+            if (!selectedPvpWorker) {
+                showNotification('Сначала выберите рабочего!', 'error');
+                return;
+            }
+            
+            if (gameData.pvp.stamina < 5) {
+                showNotification('Недостаточно выносливости! Нужно 5 очков.', 'error');
+                return;
+            }
+            
             // Выбираем бота
-            const botLevel = Math.min(Math.floor(worker.level / 5) + 1, 5);
+            const botLevel = Math.min(Math.floor(selectedPvpWorker.level / 5) + 1, 5);
             const bot = pvpBots[Math.min(botLevel - 1, pvpBots.length - 1)];
             
             // Начинаем битву в модальном окне
-            startBattleInModal(worker, bot);
+            startBattleInModal(selectedPvpWorker, bot);
+            
+            // Скрываем кнопку после начала битвы
+            document.getElementById('battleStartContainer').style.display = 'none';
         }
 
         // Открытие модального окна PvP
@@ -1925,16 +1959,314 @@ v1.0.0 (2026-01-26)
         let currentCase = null;
         let isRouletteSpinning = false;
         let rouletteItems = [];
+        
+        // Выбранный рабочий для PvP
+        let selectedPvpWorker = null;
         let selectedReward = null;
+
+        // Магазин
+        let currentShopCategory = 'deals';
+        
+        // Товары магазина
+        const shopItems = {
+            deals: [
+                {
+                    id: 'new_currency_deal',
+                    title: 'НОВАЯ ВАЛЮТА!',
+                    badge: 'ОГРАНИЧЕННО',
+                    description: '12 Шардов + эксклюзивный рабочий "Лада" + эксклюзивный фон "Золотой румянец"',
+                    price: 3500000,
+                    priceType: 'money',
+                    type: 'deal',
+                    action: () => purchaseNewCurrencyDeal()
+                }
+            ],
+            pvp: [
+                {
+                    id: 'stamina_boost',
+                    title: 'Энергия выносливости',
+                    description: '5 очков энергии для PvP битв',
+                    price: 100000,
+                    priceType: 'money',
+                    type: 'pvp',
+                    action: () => purchaseStaminaBoost()
+                },
+                {
+                    id: 'barsik_pvp',
+                    title: 'Барсик PvP',
+                    description: 'Рабочий Барсик 3 уровня для PvP арены',
+                    price: 25000,
+                    priceType: 'money',
+                    type: 'pvp',
+                    action: () => purchaseBarsikPvp()
+                }
+            ],
+            workers: [
+                {
+                    id: 'astral_discount',
+                    title: 'Астрал',
+                    badge: 'СКИДКА',
+                    description: 'Могущественный магический рабочий',
+                    price: 10000000,
+                    oldPrice: 12500000,
+                    priceType: 'money',
+                    type: 'worker',
+                    action: () => purchaseAstralDiscount()
+                },
+                {
+                    id: 'mondea_shards',
+                    title: 'Мондей',
+                    badge: 'СКИДКА',
+                    description: 'Таинственный рабочий с темной энергией',
+                    price: 15,
+                    oldPrice: 20,
+                    priceType: 'shards',
+                    type: 'worker',
+                    action: () => purchaseMondeaShards()
+                }
+            ],
+            shards: [
+                {
+                    id: 'shard_pack_1',
+                    title: 'Малый пакет Шардов',
+                    description: '1 Шард за 1,000,000 монет',
+                    price: 1000000,
+                    priceType: 'money',
+                    type: 'shards',
+                    action: () => purchaseShardPack(1)
+                },
+                {
+                    id: 'shard_pack_5',
+                    title: 'Средний пакет Шардов',
+                    badge: 'ЭКОНОМИЯ',
+                    description: '5 Шардов за 4,500,000 монет',
+                    price: 4500000,
+                    priceType: 'money',
+                    type: 'shards',
+                    action: () => purchaseShardPack(5)
+                },
+                {
+                    id: 'shard_pack_10',
+                    title: 'Большой пакет Шардов',
+                    badge: 'СУПЕР ЦЕНА',
+                    description: '10 Шардов за 8,000,000 монет',
+                    price: 8000000,
+                    priceType: 'money',
+                    type: 'shards',
+                    action: () => purchaseShardPack(10)
+                }
+            ]
+        };
+
+        // Функции магазина
+        function openShop() {
+            document.getElementById('shopModal').classList.add('show');
+            updateShopBalance();
+            renderShopItems('deals');
+            playSound('clickSound');
+        }
+
+        function closeShop() {
+            document.getElementById('shopModal').classList.remove('show');
+            playSound('clickSound');
+        }
+
+        function updateShopBalance() {
+            document.getElementById('shopMoneyBalance').textContent = formatNumber(gameData.balance);
+            document.getElementById('shopShardsBalance').textContent = formatNumber(gameData.shards);
+        }
+
+        function switchShopCategory(category) {
+            currentShopCategory = category;
+            
+            // Обновляем активную кнопку
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Рендерим товары
+            renderShopItems(category);
+            playSound('clickSound');
+        }
+
+        function renderShopItems(category) {
+            const container = document.getElementById('shopScrollContainer');
+            container.innerHTML = '';
+            
+            const items = shopItems[category] || [];
+            
+            items.forEach(item => {
+                const shopItem = createShopItemElement(item);
+                container.appendChild(shopItem);
+            });
+        }
+
+        function createShopItemElement(item) {
+            const div = document.createElement('div');
+            div.className = `shop-item ${item.type}`;
+            
+            const canAfford = item.priceType === 'money' ? 
+                gameData.balance >= item.price : 
+                gameData.shards >= item.price;
+            
+            div.innerHTML = `
+                <div class="shop-item-header">
+                    <div class="shop-item-title">${item.title}</div>
+                    ${item.badge ? `<div class="shop-item-badge">${item.badge}</div>` : ''}
+                </div>
+                <div class="shop-item-description">${item.description}</div>
+                <div class="shop-item-price">
+                    ${item.oldPrice ? `<span class="shop-item-old-price">${formatNumber(item.oldPrice)} ${item.priceType === 'money' ? '💰' : '💎'}</span>` : ''}
+                    <span>${formatNumber(item.price)} ${item.priceType === 'money' ? '💰' : '💎'}</span>
+                </div>
+                <button class="shop-item-button" ${!canAfford ? 'disabled' : ''} onclick="purchaseShopItem('${item.id}')">
+                    ${canAfford ? 'КУПИТЬ' : 'НЕДОСТАТОЧНО'}
+                </button>
+            `;
+            
+            return div;
+        }
+
+        function purchaseShopItem(itemId) {
+            const item = findShopItem(itemId);
+            if (!item) return;
+            
+            const canAfford = item.priceType === 'money' ? 
+                gameData.balance >= item.price : 
+                gameData.shards >= item.price;
+            
+            if (!canAfford) {
+                showNotification('Недостаточно средств!', 'error');
+                return;
+            }
+            
+            // Списываем средства
+            if (item.priceType === 'money') {
+                gameData.balance -= item.price;
+            } else {
+                gameData.shards -= item.price;
+            }
+            
+            // Выполняем действие
+            item.action();
+            
+            // Обновляем UI
+            updateBalance();
+            updateShopBalance();
+            renderShopItems(currentShopCategory);
+            saveGame();
+            
+            playSound('purchaseSound');
+        }
+
+        function findShopItem(itemId) {
+            for (const category in shopItems) {
+                const item = shopItems[category].find(item => item.id === itemId);
+                if (item) return item;
+            }
+            return null;
+        }
+
+        // Функции покупки товаров
+        function purchaseNewCurrencyDeal() {
+            gameData.shards += 12;
+            
+            // Добавляем рабочего "Лада"
+            const ladaWorker = {
+                id: Date.now(),
+                name: 'Лада',
+                icon: '🚗',
+                income: 500,
+                level: 5,
+                experience: 0,
+                maxExperience: 500,
+                rarity: 'exclusive',
+                style: 'normal',
+                isRare: true,
+                isSpecial: true
+            };
+            gameData.workers.push(ladaWorker);
+            
+            // Добавляем эксклюзивный фон
+            gameData.achievements.push({
+                id: 'golden_blush_bg',
+                name: 'Золотой румянец',
+                description: 'Эксклюзивный фон с падающими монетками',
+                icon: '🪙'
+            });
+            
+            showNotification('🎉 Покупка выполнена! Получено: 12 Шардов, рабочий "Лада", фон "Золотой румянец"!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseStaminaBoost() {
+            gameData.pvp.stamina = Math.min(gameData.pvp.stamina + 5, gameData.pvp.maxStamina);
+            showNotification('⚡ Получено 5 очков выносливости!', 'success');
+            updateStamina();
+        }
+
+        function purchaseBarsikPvp() {
+            const barsikPvp = {
+                id: Date.now(),
+                name: 'Барсик',
+                icon: '🐱',
+                income: 50,
+                level: 3,
+                experience: 0,
+                maxExperience: 300,
+                rarity: 'rare',
+                style: 'normal'
+            };
+            gameData.workers.push(barsikPvp);
+            showNotification('🐱 Получен рабочий "Барсик" 3 уровня!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseAstralDiscount() {
+            const astral = {
+                id: Date.now(),
+                name: 'Астрал',
+                icon: '🌟',
+                income: 1000,
+                level: 10,
+                experience: 0,
+                maxExperience: 1000,
+                rarity: 'mythic',
+                style: 'normal',
+                isRare: true
+            };
+            gameData.workers.push(astral);
+            showNotification('🌟 Получен рабочий "Астрал" по скидке!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseMondeaShards() {
+            const mondea = {
+                id: Date.now(),
+                name: 'Мондей',
+                icon: '🔮',
+                income: 800,
+                level: 8,
+                experience: 0,
+                maxExperience: 800,
+                rarity: 'legendary',
+                style: 'normal',
+                isRare: true
+            };
+            gameData.workers.push(mondea);
+            showNotification('🔮 Получен рабочий "Мондей" за Шарды!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseShardPack(amount) {
+            gameData.shards += amount;
+            showNotification(`💎 Получено ${amount} Шардов!`, 'success');
+        }
 
         // Для города
         let selectedTileIndex = null;
         let selectedBuildingId = null;
-
-        // Для ракетки
-        let rocketInterval = null;
-        let selectedRocketWorker = null;
-        let rocketFlightInterval = null;
 
         // Эксклюзивные рабочие для ракетки
         const exclusiveRocketWorkers = [
@@ -5056,6 +5388,12 @@ v1.0.0 (2026-01-26)
                 balanceIcon.textContent = gameSettings.icon;
             }
             
+            // Обновляем баланс Шардов
+            const shardsElement = document.getElementById('shardsBalance');
+            if (shardsElement) {
+                shardsElement.textContent = formatNumber(gameData.shards);
+            }
+            
             // Анимируем изменение
             animateBalanceChange();
         }
@@ -5166,6 +5504,10 @@ v1.0.0 (2026-01-26)
                                 wins: 0,
                                 losses: 0
                             };
+                            
+                            // Инициализация Шардов и магазина
+                            if (!gameData.shards) gameData.shards = 0;
+                            if (!gameData.shop) gameData.shop = { purchasedItems: [] };
                             
                             // Восстанавливаем рабочих если они пропали
                             if (!gameData.workers || !Array.isArray(gameData.workers)) {
