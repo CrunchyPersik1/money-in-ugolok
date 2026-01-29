@@ -25,6 +25,16 @@
                 launchTime: null,
                 exclusiveWorkers: [] // Эксклюзивные рабочие, полученные через ракетку
             },
+            pvp: {
+                unlocked: false,
+                stamina: 30,
+                maxStamina: 30,
+                lastStaminaReset: Date.now(),
+                selectedWorker: null,
+                battles: 0,
+                wins: 0,
+                losses: 0
+            },
             achievements: [],
             version: "2.0" // Версия сохранения
         };
@@ -53,6 +63,292 @@
 
         // Доступные иконки монет
         const coinIcons = ['💎', '💰', '🪙', '🏆', '⭐', '🔮', '💠', '🌟', '✨', '🎯', '🎰', '🎲'];
+
+        // PvP способности для рабочих
+        const pvpAbilities = {
+            // Обычные рабочие (1-10)
+            'Барсик': {
+                health: 100,
+                attack: 15,
+                defense: 10,
+                magic: 5,
+                attackName: 'Когти атаки',
+                defenseName: 'Кошачья реакция',
+                magicName: 'Мурлыканье'
+            },
+            'Бензин': {
+                health: 90,
+                attack: 20,
+                defense: 8,
+                magic: 3,
+                attackName: 'Огненный взрыв',
+                defenseName: 'Горючее покрытие',
+                magicName: 'Заправка энергией'
+            },
+            'Майн': {
+                health: 110,
+                attack: 18,
+                defense: 12,
+                magic: 2,
+                attackName: 'Удар киркой',
+                defenseName: 'Каменная кожа',
+                magicName: 'Рудная удача'
+            },
+            'Донат': {
+                health: 85,
+                attack: 25,
+                defense: 5,
+                magic: 8,
+                attackName: 'Денежный дождь',
+                defenseName: 'Золотой щит',
+                magicName: 'Инвестиция'
+            },
+            'Крипта': {
+                health: 95,
+                attack: 22,
+                defense: 7,
+                magic: 6,
+                attackName: 'Волатильность',
+                defenseName: 'Блокчейн',
+                magicName: 'Майнинг'
+            },
+            'Фермер': {
+                health: 105,
+                attack: 16,
+                defense: 11,
+                magic: 4,
+                attackName: 'Урожайный удар',
+                defenseName: 'Защита поля',
+                magicName: 'Рост'
+            },
+            'Шахтер': {
+                health: 115,
+                attack: 19,
+                defense: 13,
+                magic: 1,
+                attackName: 'Горный обвал',
+                defenseName: 'Прочная броня',
+                magicName: 'Поиск руды'
+            },
+            'Строитель': {
+                health: 100,
+                attack: 17,
+                defense: 14,
+                magic: 3,
+                attackName: 'Удар молотком',
+                defenseName: 'Стенная защита',
+                magicName: 'Ремонт'
+            },
+            'Повар': {
+                health: 90,
+                attack: 14,
+                defense: 9,
+                magic: 7,
+                attackName: 'Острый нож',
+                defenseName: 'Фартук защиты',
+                magicName: 'Лечебный суп'
+            },
+            'Водитель': {
+                health: 95,
+                attack: 18,
+                defense: 10,
+                magic: 5,
+                attackName: 'Таран',
+                defenseName: 'Автозащита',
+                magicName: 'Ускорение'
+            },
+            // Редкие рабочие (11-20)
+            'Астрал': {
+                health: 120,
+                attack: 20,
+                defense: 15,
+                magic: 12,
+                attackName: 'Пылевой меч',
+                defenseName: 'Звездный щит',
+                magicName: 'Вихрь звезд'
+            },
+            'Неон': {
+                health: 110,
+                attack: 24,
+                defense: 12,
+                magic: 10,
+                attackName: 'Неоновый удар',
+                defenseName: 'Световая завеса',
+                magicName: 'Ослепление'
+            },
+            'Кибер': {
+                health: 105,
+                attack: 26,
+                defense: 11,
+                magic: 11,
+                attackName: 'Кибератака',
+                defenseName: 'Антивирус',
+                magicName: 'Хакерство'
+            },
+            'Тесла': {
+                health: 100,
+                attack: 28,
+                defense: 10,
+                magic: 14,
+                attackName: 'Электрический разряд',
+                defenseName: 'Магнитное поле',
+                magicName: 'Перезагрузка'
+            },
+            'Квант': {
+                health: 95,
+                attack: 30,
+                defense: 8,
+                magic: 16,
+                attackName: 'Квантовый удар',
+                defenseName: 'Портальный щит',
+                magicName: 'Телепортация'
+            },
+            'Плазма': {
+                health: 108,
+                attack: 25,
+                defense: 13,
+                magic: 12,
+                attackName: 'Плазменный выстрел',
+                defenseName: 'Энергетический барьер',
+                magicName: 'Плазменный шторм'
+            },
+            'Лазер': {
+                health: 102,
+                attack: 32,
+                defense: 9,
+                magic: 13,
+                attackName: 'Лазерный луч',
+                defenseName: 'Зеркальная защита',
+                magicName: 'Преломление'
+            },
+            'Робот': {
+                health: 125,
+                attack: 22,
+                defense: 16,
+                magic: 8,
+                attackName: 'Механический удар',
+                defenseName: 'Стальной щит',
+                magicName: 'Саморемонт'
+            },
+            'Дроид': {
+                health: 115,
+                attack: 24,
+                defense: 14,
+                magic: 10,
+                attackName: 'Дроидная атака',
+                defenseName: 'Энергетический купол',
+                magicName: 'Сканирование'
+            },
+            'Меха': {
+                health: 130,
+                attack: 20,
+                defense: 18,
+                magic: 6,
+                attackName: 'Мехаудар',
+                defenseName: 'Титановая броня',
+                magicName: 'Сверхрежим'
+            },
+            // Эпические рабочие (21-30)
+            'Дракон': {
+                health: 140,
+                attack: 35,
+                defense: 20,
+                magic: 18,
+                attackName: 'Огненное дыхание',
+                defenseName: 'Чешуйчатый щит',
+                magicName: 'Драконий рев'
+            },
+            'Феникс': {
+                health: 120,
+                attack: 38,
+                defense: 16,
+                magic: 22,
+                attackName: 'Когти феникса',
+                defenseName: 'Огненное оперение',
+                magicName: 'Возрождение'
+            },
+            'Титан': {
+                health: 160,
+                attack: 30,
+                defense: 25,
+                magic: 10,
+                attackName: 'Титанский удар',
+                defenseName: 'Броня титана',
+                magicName: 'Сила земли'
+            },
+            'Валькирия': {
+                health: 130,
+                attack: 32,
+                defense: 18,
+                magic: 20,
+                attackName: 'Божественный удар',
+                defenseName: 'Щит валькирии',
+                magicName: 'Призыв небес'
+            },
+            'Самурай': {
+                health: 125,
+                attack: 40,
+                defense: 15,
+                magic: 12,
+                attackName: 'Катана',
+                defenseName: 'Быстрая защита',
+                magicName: 'Медитация'
+            },
+            'Ниндзя': {
+                health: 110,
+                attack: 42,
+                defense: 12,
+                magic: 16,
+                attackName: 'Сюрикен',
+                defenseName: 'Теневой шаг',
+                magicName: 'Иллюзия'
+            },
+            'Маг': {
+                health: 100,
+                attack: 28,
+                defense: 14,
+                magic: 30,
+                attackName: 'Магический удар',
+                defenseName: 'Магический барьер',
+                magicName: 'Заклинание хаоса'
+            },
+            'Волшебник': {
+                health: 95,
+                attack: 25,
+                defense: 12,
+                magic: 35,
+                attackName: 'Посох мага',
+                defenseName: 'Щит мудрости',
+                magicName: 'Волшебство'
+            },
+            'Алхимик': {
+                health: 105,
+                attack: 26,
+                defense: 13,
+                magic: 28,
+                attackName: 'Эликсир силы',
+                defenseName: 'Каменная кожа',
+                magicName: 'Трансформация'
+            },
+            'Мондея': {
+                health: 90,
+                attack: 20,
+                defense: 10,
+                magic: 25,
+                attackName: 'Накладываемая боль',
+                defenseName: 'Понижение защиты',
+                magicName: 'Геометрическая прогрессия'
+            }
+        };
+
+        // Боты для PvP
+        const pvpBots = [
+            { name: 'Тренировочный бот', level: 1, health: 80, attack: 12, defense: 8, magic: 5, icon: '🤖' },
+            { name: 'Легкий бот', level: 5, health: 100, attack: 18, defense: 12, magic: 8, icon: '🤖' },
+            { name: 'Средний бот', level: 10, health: 130, attack: 25, defense: 18, magic: 12, icon: '🤖' },
+            { name: 'Сильный бот', level: 15, health: 160, attack: 32, defense: 25, magic: 18, icon: '🤖' },
+            { name: 'Элитный бот', level: 20, health: 200, attack: 40, defense: 30, magic: 25, icon: '🤖' }
+        ];
 
         // Применить тему
         function applyTheme(themeId) {
@@ -128,6 +424,346 @@
             setTimeout(() => {
                 initGameAfterStart();
             }, 300);
+        }
+
+        // PvP система
+        let currentBattle = null;
+        let battleState = {
+            playerHealth: 100,
+            playerMaxHealth: 100,
+            botHealth: 100,
+            botMaxHealth: 100,
+            playerDefense: 0,
+            botDefense: 0,
+            turn: 'player',
+            battleActive: false,
+            selectedWorker: null,
+            selectedBot: null,
+            painStack: 0 // Для Мондея
+        };
+
+        // Проверка разблокировки PvP
+        function checkPvpUnlock() {
+            if (gameData.openedCases >= 10 && !gameData.pvp.unlocked) {
+                gameData.pvp.unlocked = true;
+                document.getElementById('pvp-tab-btn').style.display = 'flex';
+                showNotification('⚔️ PvP Арена разблокирована! Откройте 10 кейсов для доступа!', 'success');
+            }
+        }
+
+        // Обновление выносливости
+        function updateStamina() {
+            const now = Date.now();
+            const lastReset = gameData.pvp.lastStaminaReset;
+            const daysPassed = Math.floor((now - lastReset) / (1000 * 60 * 60 * 24));
+            
+            if (daysPassed >= 1) {
+                gameData.pvp.stamina = Math.min(gameData.pvp.stamina + (daysPassed * 30), 30);
+                gameData.pvp.lastStaminaReset = now;
+            }
+            
+            document.getElementById('staminaAmount').textContent = gameData.pvp.stamina;
+        }
+
+        // Рендер PvP рабочих
+        function renderPvpWorkers() {
+            const container = document.getElementById('pvpWorkersGrid');
+            container.innerHTML = '';
+            
+            const pvpWorkers = gameData.workers.filter(worker => {
+                const abilities = pvpAbilities[worker.name];
+                return abilities; // Только рабочие с PvP способностями
+            });
+            
+            if (pvpWorkers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚔️</div>
+                        <div class="empty-title">Нет PvP рабочих</div>
+                        <div class="empty-description">Откройте кейсы чтобы получить рабочих для PvP!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            pvpWorkers.forEach(worker => {
+                const abilities = pvpAbilities[worker.name];
+                const workerCard = document.createElement('div');
+                workerCard.className = 'pvp-worker-card';
+                workerCard.onclick = () => selectPvpWorker(worker);
+                
+                workerCard.innerHTML = `
+                    <div class="pvp-worker-avatar">${worker.icon}</div>
+                    <div class="pvp-worker-info">
+                        <div class="pvp-worker-name">${worker.name}</div>
+                        <div class="pvp-worker-stats">
+                            <div class="stat">❤️ ${abilities.health}</div>
+                            <div class="stat">⚔️ ${abilities.attack}</div>
+                            <div class="stat">🛡️ ${abilities.defense}</div>
+                            <div class="stat">✨ ${abilities.magic}</div>
+                        </div>
+                    </div>
+                    ${gameData.pvp.selectedWorker?.id === worker.id ? '<div class="selected-badge">✓</div>' : ''}
+                `;
+                
+                container.appendChild(workerCard);
+            });
+        }
+
+        // Выбор рабочего для PvP
+        function selectPvpWorker(worker) {
+            if (gameData.pvp.stamina < 5) {
+                showNotification('Недостаточно выносливости! Нужно 5 очков.', 'error');
+                return;
+            }
+            
+            gameData.pvp.selectedWorker = worker;
+            renderPvpWorkers();
+            
+            // Показываем арену
+            document.getElementById('pvpArena').style.display = 'block';
+            
+            // Выбираем бота
+            const botLevel = Math.min(Math.floor(worker.level / 5) + 1, 5);
+            const bot = pvpBots[Math.min(botLevel - 1, pvpBots.length - 1)];
+            
+            // Начинаем битву
+            startBattle(worker, bot);
+        }
+
+        // Начало битвы
+        function startBattle(worker, bot) {
+            const abilities = pvpAbilities[worker.name];
+            
+            battleState = {
+                playerHealth: abilities.health,
+                playerMaxHealth: abilities.health,
+                botHealth: bot.health,
+                botMaxHealth: bot.health,
+                playerDefense: 0,
+                botDefense: 0,
+                turn: 'player',
+                battleActive: true,
+                selectedWorker: worker,
+                selectedBot: bot,
+                painStack: 0
+            };
+            
+            currentBattle = battleState;
+            
+            // Обновляем UI
+            updateBattleUI();
+            
+            // Обновляем информацию о бойцах
+            document.getElementById('playerBattleName').textContent = gameData.playerName;
+            document.getElementById('playerWorkerIcon').textContent = worker.icon;
+            document.getElementById('playerWorkerName').textContent = worker.name;
+            document.getElementById('playerAvatar').textContent = worker.icon;
+            document.getElementById('playerFighterName').textContent = worker.name;
+            
+            document.getElementById('botBattleName').textContent = bot.name;
+            document.getElementById('botWorkerIcon').textContent = bot.icon;
+            document.getElementById('botWorkerName').textContent = bot.name;
+            document.getElementById('botAvatar').textContent = bot.icon;
+            document.getElementById('botFighterName').textContent = bot.name;
+            
+            // Добавляем лог
+            addBattleLog(`⚔️ Битва началась: ${worker.name} VS ${bot.name}!`);
+            
+            // Списываем выносливость
+            gameData.pvp.stamina -= 5;
+            updateStamina();
+        }
+
+        // Действие игрока
+        function playerAction(action) {
+            if (!battleState.battleActive || battleState.turn !== 'player') return;
+            
+            const abilities = pvpAbilities[battleState.selectedWorker.name];
+            let damage = 0;
+            let logMessage = '';
+            
+            switch(action) {
+                case 'attack':
+                    damage = Math.max(abilities.attack - battleState.botDefense, 5);
+                    battleState.botHealth = Math.max(0, battleState.botHealth - damage);
+                    logMessage = `⚔️ ${battleState.selectedWorker.name} использует ${abilities.attackName} и наносит ${damage} урона!`;
+                    break;
+                    
+                case 'defense':
+                    battleState.playerDefense = abilities.defense;
+                    logMessage = `🛡️ ${battleState.selectedWorker.name} использует ${abilities.defenseName} и повышает защиту!`;
+                    break;
+                    
+                case 'magic':
+                    if (battleState.selectedWorker.name === 'Мондея') {
+                        battleState.painStack++;
+                        logMessage = `✨ ${battleState.selectedWorker.name} использует ${abilities.magicName}! Боль возрастает (${battleState.painStack}x)`;
+                    } else {
+                        damage = abilities.magic;
+                        battleState.botHealth = Math.max(0, battleState.botHealth - damage);
+                        logMessage = `✨ ${battleState.selectedWorker.name} использует ${abilities.magicName} и наносит ${damage} магического урона!`;
+                    }
+                    break;
+            }
+            
+            addBattleLog(logMessage);
+            
+            // Применяем боль от Мондея
+            if (battleState.painStack > 0 && battleState.selectedWorker.name === 'Мондея') {
+                const painDamage = Math.floor(5 * Math.pow(1.5, battleState.painStack - 1));
+                battleState.botHealth = Math.max(0, battleState.botHealth - painDamage);
+                addBattleLog(`💀 Накладываемая боль наносит ${painDamage} урона!`);
+            }
+            
+            // Сброс защиты после хода
+            battleState.botDefense = Math.max(0, battleState.botDefense - 5);
+            
+            updateBattleUI();
+            
+            // Проверка победы
+            if (battleState.botHealth <= 0) {
+                endBattle(true);
+                return;
+            }
+            
+            // Ход бота
+            battleState.turn = 'bot';
+            setTimeout(() => botAction(), 1500);
+        }
+
+        // Действие бота
+        function botAction() {
+            if (!battleState.battleActive) return;
+            
+            const bot = battleState.selectedBot;
+            let damage = 0;
+            let logMessage = '';
+            
+            // Простой AI для бота
+            const actions = ['attack', 'defense', 'magic'];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            
+            switch(action) {
+                case 'attack':
+                    damage = Math.max(bot.attack - battleState.playerDefense, 5);
+                    battleState.playerHealth = Math.max(0, battleState.playerHealth - damage);
+                    logMessage = `⚔️ ${bot.name} атакует и наносит ${damage} урона!`;
+                    break;
+                    
+                case 'defense':
+                    battleState.botDefense = bot.defense;
+                    logMessage = `🛡️ ${bot.name} защищается и повышает защиту!`;
+                    break;
+                    
+                case 'magic':
+                    damage = bot.magic;
+                    battleState.playerHealth = Math.max(0, battleState.playerHealth - damage);
+                    logMessage = `✨ ${bot.name} использует магию и наносит ${damage} урона!`;
+                    break;
+            }
+            
+            addBattleLog(logMessage);
+            
+            // Сброс защиты после хода
+            battleState.playerDefense = Math.max(0, battleState.playerDefense - 5);
+            
+            updateBattleUI();
+            
+            // Проверка поражения
+            if (battleState.playerHealth <= 0) {
+                endBattle(false);
+                return;
+            }
+            
+            // Возврат хода игроку
+            battleState.turn = 'player';
+        }
+
+        // Обновление UI битвы
+        function updateBattleUI() {
+            // Здоровье игрока
+            const playerHealthPercent = (battleState.playerHealth / battleState.playerMaxHealth) * 100;
+            document.getElementById('playerHealth').style.width = playerHealthPercent + '%';
+            document.getElementById('playerHealthText').textContent = `${battleState.playerHealth}/${battleState.playerMaxHealth}`;
+            
+            // Здоровье бота
+            const botHealthPercent = (battleState.botHealth / battleState.botMaxHealth) * 100;
+            document.getElementById('botHealth').style.width = botHealthPercent + '%';
+            document.getElementById('botHealthText').textContent = `${battleState.botHealth}/${battleState.botMaxHealth}`;
+            
+            // Блокировка кнопок
+            const buttons = document.querySelectorAll('.battle-btn');
+            buttons.forEach(btn => {
+                btn.disabled = battleState.turn !== 'player' || !battleState.battleActive;
+            });
+        }
+
+        // Добавление сообщения в лог битвы
+        function addBattleLog(message) {
+            const log = document.getElementById('battleLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'battle-log-entry';
+            logEntry.textContent = message;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Завершение битвы
+        function endBattle(playerWon) {
+            battleState.battleActive = false;
+            
+            gameData.pvp.battles++;
+            if (playerWon) {
+                gameData.pvp.wins++;
+                showNotification(`🏆 Победа! ${battleState.selectedWorker.name} победил ${battleState.selectedBot.name}!`, 'success');
+                addBattleLog(`🏆 ${battleState.selectedWorker.name} победил!`);
+                
+                // Добавляем бота в коллекцию игрока
+                const botWorker = {
+                    id: Date.now(),
+                    name: battleState.selectedBot.name,
+                    icon: battleState.selectedBot.icon,
+                    income: battleState.selectedBot.level * 10,
+                    level: battleState.selectedBot.level,
+                    experience: 0,
+                    maxExperience: 100,
+                    rarity: 'common',
+                    style: 'normal'
+                };
+                gameData.workers.push(botWorker);
+            } else {
+                gameData.pvp.losses++;
+                showNotification(`💀 Поражение! ${battleState.selectedWorker.name} проиграл ${battleState.selectedBot.name}!`, 'error');
+                addBattleLog(`💀 ${battleState.selectedWorker.name} проиграл...`);
+                
+                // Удаляем рабочего
+                gameData.workers = gameData.workers.filter(w => w.id !== battleState.selectedWorker.id);
+            }
+            
+            // Обновляем статистику
+            updatePvpStats();
+            
+            // Сохраняем игру
+            saveGame();
+            
+            // Закрываем арену через 3 секунды
+            setTimeout(() => {
+                document.getElementById('pvpArena').style.display = 'none';
+                document.getElementById('battleLog').innerHTML = '';
+                renderPvpWorkers();
+                renderWorkers();
+            }, 3000);
+        }
+
+        // Обновление PvP статистики
+        function updatePvpStats() {
+            document.getElementById('totalBattles').textContent = gameData.pvp.battles;
+            document.getElementById('totalWins').textContent = gameData.pvp.wins;
+            document.getElementById('totalLosses').textContent = gameData.pvp.losses;
+            
+            const winRate = gameData.pvp.battles > 0 ? Math.round((gameData.pvp.wins / gameData.pvp.battles) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
         }
 
         // Рендер тем
@@ -1727,6 +2363,11 @@ v1.0.0 (2026-01-26)
             renderUpgrades();
             updateStats();
             
+            // PvP инициализация
+            updateStamina();
+            updatePvpStats();
+            checkPvpUnlock();
+            
             // Запускаем пассивный доход
             startPassiveIncome();
             updatePassiveIncome();
@@ -1816,6 +2457,9 @@ v1.0.0 (2026-01-26)
                 updateLeaderboard();
             } else if (tabName === 'stats') {
                 updateStats();
+            } else if (tabName === 'pvp') {
+                renderPvpWorkers();
+                updateStamina();
             }
         }
 
@@ -2991,6 +3635,9 @@ v1.0.0 (2026-01-26)
                 renderRocketWorkers();
                 updatePassiveIncome();
                 updateStats();
+                
+                // Проверяем разблокировку PvP
+                checkPvpUnlock();
             }
             
             updateBalance();
