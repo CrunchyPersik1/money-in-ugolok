@@ -376,6 +376,7 @@
             
             audioPlayer.addEventListener('timeupdate', () => {
                 updateCurrentTime();
+                updateProgressBar();
             });
             
             audioPlayer.addEventListener('ended', () => {
@@ -384,25 +385,70 @@
             
             // Инициализация Web Audio API
             if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-                
-                source = audioContext.createMediaElementSource(audioPlayer);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                    
+                    source = audioContext.createMediaElementSource(audioPlayer);
+                    source.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                } catch (e) {
+                    console.log('Web Audio API не поддерживается');
+                }
             }
             
             // Загрузка музыки из папки
             loadMusicFromFolder();
             
-            // Запуск визуализатора
-            if (gameData.audio.visualizerEnabled) {
+            // Запуск визуализатора если включен
+            if (gameData.audio.visualizerEnabled && analyser) {
                 startVisualizer();
             }
         }
+
+        // Переключение боковой панели
+        function toggleAudioSidebar() {
+            const sidebar = document.getElementById('audioSidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            
+            sidebar.classList.toggle('expanded');
+            
+            if (sidebar.classList.contains('expanded')) {
+                toggle.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                toggle.innerHTML = '<i class="fas fa-music"></i>';
+            }
+        }
+
+        // Обновление прогресс-бара
+        function updateProgressBar() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (audioPlayer.duration) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressFill.style.width = progress + '%';
+            }
+        }
+
+        // Клик по прогресс-бару для перемотки
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.addEventListener('click', function(e) {
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    const rect = progressBar.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    
+                    if (audioPlayer.duration) {
+                        audioPlayer.currentTime = percent * audioPlayer.duration;
+                    }
+                });
+            }
+        });
 
         // Загрузка музыки из папки
         async function loadMusicFromFolder() {
@@ -528,6 +574,9 @@
             
             audioPlayer.volume = volume;
             gameData.audio.volume = volume;
+            
+            // Обновляем отображение громкости
+            document.getElementById('volumeValue').textContent = value + '%';
         }
 
         // Обновление информации о треке
