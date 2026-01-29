@@ -1979,6 +1979,26 @@ v1.0.0 (2026-01-26)
                     priceType: 'money',
                     type: 'deal',
                     action: () => purchaseNewCurrencyDeal()
+                },
+                {
+                    id: 'starter_pack',
+                    title: 'СТАРТОВЫЙ ПАК',
+                    badge: 'ХИТ',
+                    description: '5 случайных рабочих + 2 Шарда + 500,000 монет',
+                    price: 2000000,
+                    priceType: 'money',
+                    type: 'deal',
+                    action: () => purchaseStarterPack()
+                },
+                {
+                    id: 'mega_boost',
+                    title: 'МЕГА УСКОРЕНИЕ',
+                    badge: 'x2',
+                    description: 'Все рабочие работают в 2 раза быстрее на 1 час',
+                    price: 5000000,
+                    priceType: 'money',
+                    type: 'deal',
+                    action: () => purchaseMegaBoost()
                 }
             ],
             pvp: [
@@ -1999,6 +2019,25 @@ v1.0.0 (2026-01-26)
                     priceType: 'money',
                     type: 'pvp',
                     action: () => purchaseBarsikPvp()
+                },
+                {
+                    id: 'pvp_master',
+                    title: 'PvP Мастер',
+                    badge: 'ПРО',
+                    description: 'Рабочий "Гладиатор" 10 уровня для PvP',
+                    price: 50,
+                    priceType: 'shards',
+                    type: 'pvp',
+                    action: () => purchasePvpMaster()
+                },
+                {
+                    id: 'instant_heal',
+                    title: 'Мгновенное лечение',
+                    description: 'Полное восстановление выносливости',
+                    price: 200000,
+                    priceType: 'money',
+                    type: 'pvp',
+                    action: () => purchaseInstantHeal()
                 }
             ],
             workers: [
@@ -2023,6 +2062,26 @@ v1.0.0 (2026-01-26)
                     priceType: 'shards',
                     type: 'worker',
                     action: () => purchaseMondeaShards()
+                },
+                {
+                    id: 'dragon_legend',
+                    title: 'Дракон',
+                    badge: 'ЛЕГЕНДА',
+                    description: 'Легендарный дракон с огромным доходом',
+                    price: 25,
+                    priceType: 'shards',
+                    type: 'worker',
+                    action: () => purchaseDragonLegend()
+                },
+                {
+                    id: 'cyber_ninja',
+                    title: 'Кибер Ниндзя',
+                    badge: 'ЭКСКЛЮЗИВ',
+                    description: 'Кибернетический ниндзя с критическими ударами',
+                    price: 30000000,
+                    priceType: 'money',
+                    type: 'worker',
+                    action: () => purchaseCyberNinja()
                 }
             ],
             shards: [
@@ -2054,6 +2113,16 @@ v1.0.0 (2026-01-26)
                     priceType: 'money',
                     type: 'shards',
                     action: () => purchaseShardPack(10)
+                },
+                {
+                    id: 'shard_pack_50',
+                    title: 'МЕГА ПАКЕТ',
+                    badge: 'ВАУ!',
+                    description: '50 Шардов за 35,000,000 монет',
+                    price: 35000000,
+                    priceType: 'money',
+                    type: 'shards',
+                    action: () => purchaseShardPack(50)
                 }
             ]
         };
@@ -2062,7 +2131,7 @@ v1.0.0 (2026-01-26)
         function openShop() {
             document.getElementById('shopModal').classList.add('show');
             updateShopBalance();
-            renderShopItems('deals');
+            renderAllShopItems();
             playSound('clickSound');
         }
 
@@ -2076,29 +2145,34 @@ v1.0.0 (2026-01-26)
             document.getElementById('shopShardsBalance').textContent = formatNumber(gameData.shards);
         }
 
-        function switchShopCategory(category) {
-            currentShopCategory = category;
-            
-            // Обновляем активную кнопку
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Рендерим товары
-            renderShopItems(category);
-            playSound('clickSound');
-        }
-
-        function renderShopItems(category) {
+        function renderAllShopItems() {
             const container = document.getElementById('shopScrollContainer');
             container.innerHTML = '';
             
-            const items = shopItems[category] || [];
+            // Добавляем разделители категорий
+            const categories = [
+                { key: 'deals', title: '🔥 ГОРЯЧИЕ АКЦИИ', type: 'deal' },
+                { key: 'pvp', title: '⚔️ PvP ПРЕДЛОЖЕНИЯ', type: 'pvp' },
+                { key: 'workers', title: '👷 РАБОЧИЕ СО СКИДКАМИ', type: 'worker' },
+                { key: 'shards', title: '💎 ШАРДЫ', type: 'shards' }
+            ];
             
-            items.forEach(item => {
-                const shopItem = createShopItemElement(item);
-                container.appendChild(shopItem);
+            categories.forEach(category => {
+                // Добавляем заголовок категории
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'shop-category-header';
+                categoryHeader.innerHTML = `<h3>${category.title}</h3>`;
+                container.appendChild(categoryHeader);
+                
+                // Добавляем товары категории
+                const items = shopItems[category.key] || [];
+                items.forEach(item => {
+                    // Проверяем не куплен ли товар
+                    if (!gameData.shop.purchasedItems.includes(item.id)) {
+                        const shopItem = createShopItemElement(item);
+                        container.appendChild(shopItem);
+                    }
+                });
             });
         }
 
@@ -2141,6 +2215,12 @@ v1.0.0 (2026-01-26)
                 return;
             }
             
+            // Проверяем не куплен ли уже товар
+            if (gameData.shop.purchasedItems.includes(itemId)) {
+                showNotification('Этот товар уже куплен!', 'error');
+                return;
+            }
+            
             // Списываем средства
             if (item.priceType === 'money') {
                 gameData.balance -= item.price;
@@ -2148,16 +2228,138 @@ v1.0.0 (2026-01-26)
                 gameData.shards -= item.price;
             }
             
+            // Добавляем товар в купленные
+            gameData.shop.purchasedItems.push(itemId);
+            
             // Выполняем действие
             item.action();
             
             // Обновляем UI
             updateBalance();
             updateShopBalance();
-            renderShopItems(currentShopCategory);
+            renderAllShopItems();
             saveGame();
             
             playSound('purchaseSound');
+        }
+
+        // Новые функции покупки
+        function purchaseStarterPack() {
+            gameData.balance += 500000;
+            gameData.shards += 2;
+            
+            // Добавляем 5 случайных рабочих
+            const randomWorkers = [
+                { name: 'Робот', icon: '🤖', income: 25, rarity: 'common' },
+                { name: 'Призрак', icon: '👻', income: 30, rarity: 'rare' },
+                { name: 'Вампир', icon: '🧛', income: 40, rarity: 'epic' },
+                { name: 'Циклоп', icon: '👁️', income: 35, rarity: 'rare' },
+                { name: 'Джинн', icon: '🧞', income: 50, rarity: 'epic' }
+            ];
+            
+            for (let i = 0; i < 5; i++) {
+                const worker = randomWorkers[Math.floor(Math.random() * randomWorkers.length)];
+                const newWorker = {
+                    id: Date.now() + i,
+                    name: worker.name,
+                    icon: worker.icon,
+                    income: worker.income,
+                    level: 1,
+                    experience: 0,
+                    maxExperience: 100,
+                    rarity: worker.rarity,
+                    style: 'normal'
+                };
+                gameData.workers.push(newWorker);
+            }
+            
+            showNotification('🎉 Получен стартовый пак! 5 рабочих + 2 Шарда + 500,000 монет!', 'success');
+            renderWorkers();
+            updatePassiveIncome();
+        }
+
+        function purchaseMegaBoost() {
+            // Увеличиваем доход всех рабочих в 2 раза на 1 час
+            gameData.workers.forEach(worker => {
+                worker.originalIncome = worker.income;
+                worker.income *= 2;
+            });
+            
+            showNotification('⚡ Мега ускорение активано! Все рабочие работают в 2 раза быстрее 1 час!', 'success');
+            updatePassiveIncome();
+            
+            // Возвращаем через 1 час
+            setTimeout(() => {
+                gameData.workers.forEach(worker => {
+                    if (worker.originalIncome) {
+                        worker.income = worker.originalIncome;
+                        delete worker.originalIncome;
+                    }
+                });
+                updatePassiveIncome();
+                showNotification('⏰ Мега ускорение закончилось!', 'info');
+            }, 3600000); // 1 час
+        }
+
+        function purchasePvpMaster() {
+            const gladiator = {
+                id: Date.now(),
+                name: 'Гладиатор',
+                icon: '⚔️',
+                income: 200,
+                level: 10,
+                experience: 0,
+                maxExperience: 1000,
+                rarity: 'legendary',
+                style: 'normal',
+                isRare: true
+            };
+            gameData.workers.push(gladiator);
+            showNotification('⚔️ Получен рабочий "Гладиатор" 10 уровня!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseInstantHeal() {
+            gameData.pvp.stamina = gameData.pvp.maxStamina;
+            showNotification('💚 Выносливость полностью восстановлена!', 'success');
+            updateStamina();
+        }
+
+        function purchaseDragonLegend() {
+            const dragon = {
+                id: Date.now(),
+                name: 'Дракон',
+                icon: '🐉',
+                income: 1500,
+                level: 15,
+                experience: 0,
+                maxExperience: 1500,
+                rarity: 'exclusive',
+                style: 'normal',
+                isRare: true,
+                isSpecial: true
+            };
+            gameData.workers.push(dragon);
+            showNotification('🐉 Получен легендарный Дракон!', 'success');
+            renderWorkers();
+        }
+
+        function purchaseCyberNinja() {
+            const ninja = {
+                id: Date.now(),
+                name: 'Кибер Ниндзя',
+                icon: '🥷',
+                income: 800,
+                level: 12,
+                experience: 0,
+                maxExperience: 1200,
+                rarity: 'mythic',
+                style: 'normal',
+                isRare: true
+            };
+            gameData.workers.push(ninja);
+            showNotification('🥷 Получен эксклюзивный Кибер Ниндзя!', 'success');
+            renderWorkers();
         }
 
         function findShopItem(itemId) {
@@ -4827,13 +5029,12 @@ v1.0.0 (2026-01-26)
                 }
                 
                 gameData.workers.forEach(worker => {
-                    if (!worker.isRare && !worker.isSpecial) {
-                        const experienceGain = (worker.income / 10) * experienceMultiplier;
-                        worker.experience += experienceGain;
-                        
-                        if (worker.experience >= worker.maxExperience) {
-                            worker.experience = worker.maxExperience;
-                        }
+                    // ВСЕ рабочие получают опыт, включая редких
+                    const experienceGain = (worker.income / 10) * experienceMultiplier;
+                    worker.experience += experienceGain;
+                    
+                    if (worker.experience >= worker.maxExperience) {
+                        worker.experience = worker.maxExperience;
                     }
                 });
                 

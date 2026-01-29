@@ -3141,9 +3141,9 @@ body::before {
 /* Кнопка магазина */
 .shop-button-container {
     position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
     z-index: 1001;
     border: 3px solid red !important; /* Временная рамка для отладки */
 }
@@ -3151,16 +3151,19 @@ body::before {
 .shop-button {
     background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
     border: none;
-    border-radius: 20px;
-    padding: 1rem 2rem;
+    border-radius: 15px;
+    padding: 1rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3);
     animation: shop-pulse 3s infinite;
     border: 2px solid yellow !important; /* Временная рамка для отладки */
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
 }
 
 .shop-button:hover {
@@ -3341,6 +3344,23 @@ body::before {
 .shop-scroll-container::-webkit-scrollbar-thumb {
     background: var(--neon-pink);
     border-radius: 4px;
+}
+
+.shop-category-header {
+    width: 100%;
+    margin: 2rem 0 1rem 0;
+    text-align: center;
+}
+
+.shop-category-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+    margin: 0;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid var(--neon-pink);
+    background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.1), transparent);
 }
 
 .shop-item {
