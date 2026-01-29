@@ -3094,26 +3094,64 @@ body::before {
     opacity: 0.8;
 }
 
-.audio-controls {
+/* Боковая панель аудио */
+.audio-sidebar {
     position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
+    top: 50%;
+    right: -280px;
+    transform: translateY(-50%);
+    width: 320px;
+    background: rgba(0, 0, 0, 0.95);
     border: 2px solid var(--neon-cyan);
-    border-radius: 20px;
-    padding: 1.5rem;
+    border-radius: 20px 0 0 20px;
     backdrop-filter: blur(20px);
     z-index: 1000;
+    transition: right 0.3s ease;
     pointer-events: all;
-    min-width: 400px;
     box-shadow: var(--shadow-neon);
+}
+
+.audio-sidebar.expanded {
+    right: 0;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--neon-cyan);
+    border-right: none;
+    border-radius: 15px 0 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--neon-cyan);
+    font-size: 1.2rem;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--neon-pink);
+    border-color: var(--neon-pink);
+}
+
+.sidebar-content {
+    padding: 1.5rem;
+    height: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .audio-player {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .track-info {
@@ -3126,11 +3164,30 @@ body::before {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
     color: var(--neon-cyan);
+    word-wrap: break-word;
 }
 
 .track-time {
     font-size: 0.9rem;
     color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    width: 0%;
+    transition: width 0.1s ease;
+    border-radius: 4px;
 }
 
 .player-controls {
@@ -3173,10 +3230,11 @@ body::before {
 
 .volume-control i {
     font-size: 1.2rem;
+    min-width: 20px;
 }
 
 .volume-control input[type="range"] {
-    width: 100px;
+    flex: 1;
     height: 6px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
@@ -3199,27 +3257,33 @@ body::before {
     transform: scale(1.2);
 }
 
+.volume-value {
+    font-size: 0.9rem;
+    color: var(--neon-cyan);
+    min-width: 40px;
+    text-align: right;
+}
+
 .visualizer-controls {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .viz-btn {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--neon-cyan);
     border-radius: 10px;
-    padding: 0.5rem 1rem;
+    padding: 0.8rem;
     color: var(--text-primary);
     font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition-smooth);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    text-align: center;
 }
 
 .viz-btn:hover {
@@ -3232,11 +3296,12 @@ body::before {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--neon-cyan);
     border-radius: 8px;
-    padding: 0.4rem 0.8rem;
+    padding: 0.6rem;
     color: var(--text-primary);
     font-size: 0.9rem;
     cursor: pointer;
     outline: none;
+    width: 100%;
 }
 
 #vizStyle option {
@@ -3246,17 +3311,13 @@ body::before {
 
 /* Адаптивность для мобильных */
 @media (max-width: 768px) {
-    .audio-controls {
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        transform: none;
-        min-width: auto;
-        padding: 1rem;
+    .audio-sidebar {
+        width: 280px;
+        right: -240px;
     }
     
-    .player-controls {
-        gap: 0.5rem;
+    .sidebar-content {
+        padding: 1rem;
     }
     
     .control-btn {
@@ -3265,13 +3326,10 @@ body::before {
         font-size: 1rem;
     }
     
-    .visualizer-controls {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: stretch;
-    }
-    
-    .viz-btn {
-        justify-content: center;
+    .sidebar-toggle {
+        width: 35px;
+        height: 60px;
+        left: -35px;
+        font-size: 1rem;
     }
 }
