@@ -444,10 +444,12 @@
 
         // Проверка разблокировки PvP
         function checkPvpUnlock() {
-            if (gameData.openedCases >= 10 && !gameData.pvp.unlocked) {
-                gameData.pvp.unlocked = true;
+            if (gameData.openedCases >= 10) {
+                if (!gameData.pvp.unlocked) {
+                    gameData.pvp.unlocked = true;
+                    showNotification('⚔️ PvP Арена разблокирована! Доступна новая вкладка!', 'success');
+                }
                 document.getElementById('pvp-tab-btn').style.display = 'flex';
-                showNotification('⚔️ PvP Арена разблокирована! Откройте 10 кейсов для доступа!', 'success');
             }
         }
 
@@ -4486,6 +4488,16 @@ v1.0.0 (2026-01-26)
                             if (!gameData.achievements) gameData.achievements = [];
                             if (!gameData.rocket.crashes) gameData.rocket.crashes = 0;
                             if (!gameData.rocket.exclusiveWorkers) gameData.rocket.exclusiveWorkers = [];
+                            if (!gameData.pvp) gameData.pvp = {
+                                unlocked: false,
+                                stamina: 30,
+                                maxStamina: 30,
+                                lastStaminaReset: Date.now(),
+                                selectedWorker: null,
+                                battles: 0,
+                                wins: 0,
+                                losses: 0
+                            };
                             
                             document.getElementById('playerNameDisplay').textContent = gameData.playerName;
                             updateBalance();
@@ -4539,6 +4551,9 @@ v1.0.0 (2026-01-26)
                 console.error('Ошибка загрузки:', e);
                 showNotification('Ошибка загрузки сохранения!', 'error');
             }
+            
+            // Проверяем разблокировку PvP после загрузки
+            checkPvpUnlock();
         }
 
         // Экспорт сохранения
