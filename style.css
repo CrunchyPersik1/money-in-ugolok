@@ -3074,6 +3074,19 @@ body::before {
     border-bottom: none;
 }
 
+/* Заблокированная кнопка закрытия */
+.pvp-modal-close.battle-active {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.5);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.pvp-modal-close.battle-active:hover {
+    background: rgba(255, 0, 0, 0.3);
+    transform: none;
+}
+
 /* Аудио визуализатор */
 .audio-visualizer {
     position: fixed;

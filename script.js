@@ -962,6 +962,18 @@
             playSound('clickSound');
         }
 
+        // Попытка закрытия модального окна PvP
+        function attemptClosePvpModal() {
+            // Проверяем идет ли битва
+            if (battleState && (battleState.playerHealth > 0 && battleState.botHealth > 0)) {
+                showNotification('⚠️ Нельзя выйти во время битвы!', 'error');
+                playSound('errorSound');
+                return;
+            }
+            
+            closePvpModal();
+        }
+
         // Закрытие модального окна PvP
         function closePvpModal() {
             document.getElementById('pvpModal').classList.remove('show');
@@ -969,6 +981,9 @@
             
             // Очищаем лог битвы
             document.getElementById('modalBattleLog').innerHTML = '';
+            
+            // Сбрасываем состояние битвы
+            battleState = null;
         }
 
         // Начало битвы в модальном окне
@@ -983,58 +998,36 @@
                 playerDefense: 0,
                 botDefense: 0,
                 turn: 'player',
-                battleActive: true,
-                selectedWorker: worker,
-                selectedBot: bot,
-                painStack: 0
+                playerSpecialStacks: 0,
+                botSpecialStacks: 0,
+                battleActive: true
             };
             
-            currentBattle = battleState;
+            // Блокируем кнопку закрытия
+            const closeBtn = document.querySelector('.pvp-modal-close');
+            closeBtn.classList.add('battle-active');
             
-            // Обновляем UI в модальном окне
-            updateBattleUIModal();
-            
-            // Обновляем информацию о бойцах
+            // Обновляем UI
             document.getElementById('modalPlayerName').textContent = gameData.playerName;
             document.getElementById('modalPlayerIcon').textContent = worker.icon;
             document.getElementById('modalPlayerWorkerName').textContent = worker.name;
-            document.getElementById('modalPlayerAvatar').textContent = worker.icon;
-            document.getElementById('modalPlayerFighterName').textContent = worker.name;
             
             document.getElementById('modalBotName').textContent = bot.name;
             document.getElementById('modalBotIcon').textContent = bot.icon;
             document.getElementById('modalBotWorkerName').textContent = bot.name;
-            document.getElementById('modalBotAvatar').textContent = bot.icon;
-            document.getElementById('modalBotFighterName').textContent = bot.name;
             
-            // Добавляем лог
-            addBattleLogModal(`⚔️ Битва началась: ${worker.name} VS ${bot.name}!`);
+            // Показываем арены
+            document.getElementById('modalBattleArena').style.display = 'block';
+            document.getElementById('modalBattleControls').style.display = 'block';
+            document.getElementById('modalBattleLog').style.display = 'block';
             
-            // Списываем выносливость
-            gameData.pvp.stamina -= 5;
-            updateStamina();
+            // Очищаем и обновляем UI
+            document.getElementById('modalBattleLog').innerHTML = '';
+            updateBattleUIModal();
             
-            // Открываем модальное окно
-            openPvpModal();
-        }
-
-        // Обновление UI битвы в модальном окне
-        function updateBattleUIModal() {
-            // Здоровье игрока
-            const playerHealthPercent = (battleState.playerHealth / battleState.playerMaxHealth) * 100;
-            document.getElementById('modalPlayerHealth').style.width = playerHealthPercent + '%';
-            document.getElementById('modalPlayerHealthText').textContent = `${battleState.playerHealth}/${battleState.playerMaxHealth}`;
-            
-            // Здоровье бота
-            const botHealthPercent = (battleState.botHealth / battleState.botMaxHealth) * 100;
-            document.getElementById('modalBotHealth').style.width = botHealthPercent + '%';
-            document.getElementById('modalBotHealthText').textContent = `${battleState.botHealth}/${battleState.botMaxHealth}`;
-            
-            // Блокировка кнопок
-            const buttons = document.querySelectorAll('#modalBattleActions .battle-btn');
-            buttons.forEach(btn => {
-                btn.disabled = battleState.turn !== 'player' || !battleState.battleActive;
-            });
+            addBattleLogModal(`⚔️ Битва началась: ${worker.name} против ${bot.name}!`);
+            addBattleLogModal(`📊 ${worker.name}: ${abilities.health} HP, ${abilities.attack} ATK, ${abilities.defense} DEF, ${abilities.magic} MAG`);
+            addBattleLogModal(`📊 ${bot.name}: ${bot.health} HP, ${bot.attack} ATK, ${bot.defense} DEF, ${bot.magic} MAG`);
         }
 
         // Добавление сообщения в лог битвы в модальном окне
@@ -1097,6 +1090,10 @@
         // Завершение битвы в модальном окне
         function endBattleModal(playerWon) {
             battleState.battleActive = false;
+            
+            // Разблокируем кнопку закрытия
+            const closeBtn = document.querySelector('.pvp-modal-close');
+            closeBtn.classList.remove('battle-active');
             
             gameData.pvp.battles++;
             if (playerWon) {
@@ -3057,6 +3054,24 @@ v1.0.0 (2026-01-26)
             document.getElementById('achievementsModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeAchievements();
+                }
+            });
+            
+            // Закрытие PvP модального окна при клике вне его
+            document.getElementById('pvpModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    attemptClosePvpModal();
+                }
+            });
+            
+            // Блокировка Escape во время PvP битвы
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const pvpModal = document.getElementById('pvpModal');
+                    if (pvpModal.classList.contains('show')) {
+                        attemptClosePvpModal();
+                        e.preventDefault();
+                    }
                 }
             });
             
