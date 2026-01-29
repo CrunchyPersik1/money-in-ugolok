@@ -343,11 +343,11 @@
 
         // Боты для PvP
         const pvpBots = [
-            { name: 'Тренировочный бот', level: 1, health: 80, attack: 12, defense: 8, magic: 5, icon: '🤖' },
-            { name: 'Легкий бот', level: 5, health: 100, attack: 18, defense: 12, magic: 8, icon: '🤖' },
-            { name: 'Средний бот', level: 10, health: 130, attack: 25, defense: 18, magic: 12, icon: '🤖' },
-            { name: 'Сильный бот', level: 15, health: 160, attack: 32, defense: 25, magic: 18, icon: '🤖' },
-            { name: 'Элитный бот', level: 20, health: 200, attack: 40, defense: 30, magic: 25, icon: '🤖' }
+            { name: 'Барсик', level: 1, health: 100, attack: 15, defense: 10, magic: 5, icon: '🐱' },
+            { name: 'Бензин', level: 5, health: 90, attack: 20, defense: 8, magic: 3, icon: '⛽' },
+            { name: 'Астрал', level: 10, health: 120, attack: 20, defense: 15, magic: 12, icon: '🌟' },
+            { name: 'Дракон', level: 15, health: 140, attack: 35, defense: 20, magic: 18, icon: '🐲' },
+            { name: 'Мондея', level: 20, health: 90, attack: 20, defense: 10, magic: 25, icon: '🔮' }
         ];
 
         // Применить тему
@@ -522,15 +522,196 @@
             gameData.pvp.selectedWorker = worker;
             renderPvpWorkers();
             
-            // Показываем арену
-            document.getElementById('pvpArena').style.display = 'block';
-            
             // Выбираем бота
             const botLevel = Math.min(Math.floor(worker.level / 5) + 1, 5);
             const bot = pvpBots[Math.min(botLevel - 1, pvpBots.length - 1)];
             
-            // Начинаем битву
-            startBattle(worker, bot);
+            // Начинаем битву в модальном окне
+            startBattleInModal(worker, bot);
+        }
+
+        // Открытие модального окна PvP
+        function openPvpModal() {
+            document.getElementById('pvpModal').classList.add('show');
+            playSound('clickSound');
+        }
+
+        // Закрытие модального окна PvP
+        function closePvpModal() {
+            document.getElementById('pvpModal').classList.remove('show');
+            playSound('clickSound');
+            
+            // Очищаем лог битвы
+            document.getElementById('modalBattleLog').innerHTML = '';
+        }
+
+        // Начало битвы в модальном окне
+        function startBattleInModal(worker, bot) {
+            const abilities = pvpAbilities[worker.name];
+            
+            battleState = {
+                playerHealth: abilities.health,
+                playerMaxHealth: abilities.health,
+                botHealth: bot.health,
+                botMaxHealth: bot.health,
+                playerDefense: 0,
+                botDefense: 0,
+                turn: 'player',
+                battleActive: true,
+                selectedWorker: worker,
+                selectedBot: bot,
+                painStack: 0
+            };
+            
+            currentBattle = battleState;
+            
+            // Обновляем UI в модальном окне
+            updateBattleUIModal();
+            
+            // Обновляем информацию о бойцах
+            document.getElementById('modalPlayerName').textContent = gameData.playerName;
+            document.getElementById('modalPlayerIcon').textContent = worker.icon;
+            document.getElementById('modalPlayerWorkerName').textContent = worker.name;
+            document.getElementById('modalPlayerAvatar').textContent = worker.icon;
+            document.getElementById('modalPlayerFighterName').textContent = worker.name;
+            
+            document.getElementById('modalBotName').textContent = bot.name;
+            document.getElementById('modalBotIcon').textContent = bot.icon;
+            document.getElementById('modalBotWorkerName').textContent = bot.name;
+            document.getElementById('modalBotAvatar').textContent = bot.icon;
+            document.getElementById('modalBotFighterName').textContent = bot.name;
+            
+            // Добавляем лог
+            addBattleLogModal(`⚔️ Битва началась: ${worker.name} VS ${bot.name}!`);
+            
+            // Списываем выносливость
+            gameData.pvp.stamina -= 5;
+            updateStamina();
+            
+            // Открываем модальное окно
+            openPvpModal();
+        }
+
+        // Обновление UI битвы в модальном окне
+        function updateBattleUIModal() {
+            // Здоровье игрока
+            const playerHealthPercent = (battleState.playerHealth / battleState.playerMaxHealth) * 100;
+            document.getElementById('modalPlayerHealth').style.width = playerHealthPercent + '%';
+            document.getElementById('modalPlayerHealthText').textContent = `${battleState.playerHealth}/${battleState.playerMaxHealth}`;
+            
+            // Здоровье бота
+            const botHealthPercent = (battleState.botHealth / battleState.botMaxHealth) * 100;
+            document.getElementById('modalBotHealth').style.width = botHealthPercent + '%';
+            document.getElementById('modalBotHealthText').textContent = `${battleState.botHealth}/${battleState.botMaxHealth}`;
+            
+            // Блокировка кнопок
+            const buttons = document.querySelectorAll('#modalBattleActions .battle-btn');
+            buttons.forEach(btn => {
+                btn.disabled = battleState.turn !== 'player' || !battleState.battleActive;
+            });
+        }
+
+        // Добавление сообщения в лог битвы в модальном окне
+        function addBattleLogModal(message) {
+            const log = document.getElementById('modalBattleLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'battle-log-entry';
+            logEntry.textContent = message;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Действие бота в модальном окне
+        function botActionModal() {
+            if (!battleState.battleActive) return;
+            
+            const bot = battleState.selectedBot;
+            let damage = 0;
+            let logMessage = '';
+            
+            // Простой AI для бота
+            const actions = ['attack', 'defense', 'magic'];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            
+            switch(action) {
+                case 'attack':
+                    damage = Math.max(bot.attack - battleState.playerDefense, 5);
+                    battleState.playerHealth = Math.max(0, battleState.playerHealth - damage);
+                    logMessage = `⚔️ ${bot.name} атакует и наносит ${damage} урона!`;
+                    break;
+                    
+                case 'defense':
+                    battleState.botDefense = bot.defense;
+                    logMessage = `🛡️ ${bot.name} защищается и повышает защиту!`;
+                    break;
+                    
+                case 'magic':
+                    damage = bot.magic;
+                    battleState.playerHealth = Math.max(0, battleState.playerHealth - damage);
+                    logMessage = `✨ ${bot.name} использует магию и наносит ${damage} урона!`;
+                    break;
+            }
+            
+            addBattleLogModal(logMessage);
+            
+            // Сброс защиты после хода
+            battleState.playerDefense = Math.max(0, battleState.playerDefense - 5);
+            
+            // Проверка поражения
+            if (battleState.playerHealth <= 0) {
+                endBattleModal(false);
+                return;
+            }
+            
+            // Возврат хода игроку
+            battleState.turn = 'player';
+            updateBattleUIModal(); // Обновляем UI после смены хода
+        }
+
+        // Завершение битвы в модальном окне
+        function endBattleModal(playerWon) {
+            battleState.battleActive = false;
+            
+            gameData.pvp.battles++;
+            if (playerWon) {
+                gameData.pvp.wins++;
+                showNotification(`🏆 Победа! ${battleState.selectedWorker.name} победил ${battleState.selectedBot.name}!`, 'success');
+                addBattleLogModal(`🏆 ${battleState.selectedWorker.name} победил!`);
+                
+                // Добавляем бота в коллекцию игрока
+                const botWorker = {
+                    id: Date.now(),
+                    name: battleState.selectedBot.name,
+                    icon: battleState.selectedBot.icon,
+                    income: battleState.selectedBot.level * 10,
+                    level: battleState.selectedBot.level,
+                    experience: 0,
+                    maxExperience: 100,
+                    rarity: 'common',
+                    style: 'normal'
+                };
+                gameData.workers.push(botWorker);
+            } else {
+                gameData.pvp.losses++;
+                showNotification(`💀 Поражение! ${battleState.selectedWorker.name} проиграл ${battleState.selectedBot.name}!`, 'error');
+                addBattleLogModal(`💀 ${battleState.selectedWorker.name} проиграл...`);
+                
+                // Удаляем рабочего
+                gameData.workers = gameData.workers.filter(w => w.id !== battleState.selectedWorker.id);
+            }
+            
+            // Обновляем статистику
+            updatePvpStats();
+            
+            // Сохраняем игру
+            saveGame();
+            
+            // Закрываем модальное окно через 3 секунды
+            setTimeout(() => {
+                closePvpModal();
+                renderPvpWorkers();
+                renderWorkers();
+            }, 3000);
         }
 
         // Начало битвы
@@ -609,29 +790,29 @@
                     break;
             }
             
-            addBattleLog(logMessage);
+            addBattleLogModal(logMessage);
             
             // Применяем боль от Мондея
             if (battleState.painStack > 0 && battleState.selectedWorker.name === 'Мондея') {
                 const painDamage = Math.floor(5 * Math.pow(1.5, battleState.painStack - 1));
                 battleState.botHealth = Math.max(0, battleState.botHealth - painDamage);
-                addBattleLog(`💀 Накладываемая боль наносит ${painDamage} урона!`);
+                addBattleLogModal(`💀 Накладываемая боль наносит ${painDamage} урона!`);
             }
             
             // Сброс защиты после хода
             battleState.botDefense = Math.max(0, battleState.botDefense - 5);
             
-            updateBattleUI();
+            updateBattleUIModal();
             
             // Проверка победы
             if (battleState.botHealth <= 0) {
-                endBattle(true);
+                endBattleModal(true);
                 return;
             }
             
             // Ход бота
             battleState.turn = 'bot';
-            setTimeout(() => botAction(), 1500);
+            setTimeout(() => botActionModal(), 1500);
         }
 
         // Действие бота
@@ -670,8 +851,6 @@
             // Сброс защиты после хода
             battleState.playerDefense = Math.max(0, battleState.playerDefense - 5);
             
-            updateBattleUI();
-            
             // Проверка поражения
             if (battleState.playerHealth <= 0) {
                 endBattle(false);
@@ -680,6 +859,7 @@
             
             // Возврат хода игроку
             battleState.turn = 'player';
+            updateBattleUI(); // Обновляем UI после смены хода
         }
 
         // Обновление UI битвы

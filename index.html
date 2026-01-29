@@ -318,67 +318,6 @@
                         <div class="pvp-workers-grid" id="pvpWorkersGrid"></div>
                     </div>
                     
-                    <div class="pvs-arena" id="pvpArena" style="display: none;">
-                        <div class="arena-header">
-                            <div class="player-info">
-                                <div class="player-name" id="playerBattleName">Игрок</div>
-                                <div class="player-worker" id="playerWorkerInfo">
-                                    <div class="worker-icon" id="playerWorkerIcon">👤</div>
-                                    <div class="worker-name" id="playerWorkerName">Рабочий</div>
-                                </div>
-                            </div>
-                            <div class="vs-text">VS</div>
-                            <div class="bot-info">
-                                <div class="bot-name" id="botBattleName">Бот</div>
-                                <div class="bot-worker" id="botWorkerInfo">
-                                    <div class="worker-icon" id="botWorkerIcon">🤖</div>
-                                    <div class="worker-name" id="botWorkerName">Бот</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="battle-arena">
-                            <div class="fighter player-fighter">
-                                <div class="fighter-avatar" id="playerAvatar">👤</div>
-                                <div class="fighter-stats">
-                                    <div class="health-bar">
-                                        <div class="health-fill" id="playerHealth" style="width: 100%;"></div>
-                                        <span class="health-text" id="playerHealthText">100/100</span>
-                                    </div>
-                                    <div class="fighter-name" id="playerFighterName">Игрок</div>
-                                </div>
-                            </div>
-                            
-                            <div class="fighter bot-fighter">
-                                <div class="fighter-avatar" id="botAvatar">🤖</div>
-                                <div class="fighter-stats">
-                                    <div class="health-bar">
-                                        <div class="health-fill" id="botHealth" style="width: 100%;"></div>
-                                        <span class="health-text" id="botHealthText">100/100</span>
-                                    </div>
-                                    <div class="fighter-name" id="botFighterName">Бот</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="battle-actions" id="battleActions">
-                            <button class="battle-btn attack-btn" onclick="playerAction('attack')">
-                                <span class="action-icon">⚔️</span>
-                                <span class="action-name">Атака</span>
-                            </button>
-                            <button class="battle-btn defense-btn" onclick="playerAction('defense')">
-                                <span class="action-icon">🛡️</span>
-                                <span class="action-name">Защита</span>
-                            </button>
-                            <button class="battle-btn magic-btn" onclick="playerAction('magic')">
-                                <span class="action-icon">✨</span>
-                                <span class="action-name">Магия</span>
-                            </button>
-                        </div>
-                        
-                        <div class="battle-log" id="battleLog"></div>
-                    </div>
-                    
                     <div class="pvp-stats">
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -404,6 +343,77 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PvP модальное окно -->
+    <div class="pvp-modal" id="pvpModal">
+        <div class="pvp-modal-content">
+            <div class="pvp-modal-header">
+                <div class="pvp-modal-title">⚔️ PvP Арена</div>
+                <div class="pvp-modal-close" onclick="closePvpModal()">×</div>
+            </div>
+            
+            <div class="pvp-modal-body">
+                <div class="arena-header">
+                    <div class="player-info">
+                        <div class="player-name" id="modalPlayerName">Игрок</div>
+                        <div class="player-worker" id="modalPlayerWorker">
+                            <div class="worker-icon" id="modalPlayerIcon">👤</div>
+                            <div class="worker-name" id="modalPlayerWorkerName">Рабочий</div>
+                        </div>
+                    </div>
+                    <div class="vs-text">VS</div>
+                    <div class="bot-info">
+                        <div class="bot-name" id="modalBotName">Бот</div>
+                        <div class="bot-worker" id="modalBotWorker">
+                            <div class="worker-icon" id="modalBotIcon">🤖</div>
+                            <div class="worker-name" id="modalBotWorkerName">Бот</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="battle-arena">
+                    <div class="fighter player-fighter">
+                        <div class="fighter-avatar" id="modalPlayerAvatar">👤</div>
+                        <div class="fighter-stats">
+                            <div class="health-bar">
+                                <div class="health-fill" id="modalPlayerHealth" style="width: 100%;"></div>
+                                <span class="health-text" id="modalPlayerHealthText">100/100</span>
+                            </div>
+                            <div class="fighter-name" id="modalPlayerFighterName">Игрок</div>
+                        </div>
+                    </div>
+                    
+                    <div class="fighter bot-fighter">
+                        <div class="fighter-avatar" id="modalBotAvatar">🤖</div>
+                        <div class="fighter-stats">
+                            <div class="health-bar">
+                                <div class="health-fill" id="modalBotHealth" style="width: 100%;"></div>
+                                <span class="health-text" id="modalBotHealthText">100/100</span>
+                            </div>
+                            <div class="fighter-name" id="modalBotFighterName">Бот</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="battle-actions" id="modalBattleActions">
+                    <button class="battle-btn attack-btn" onclick="playerAction('attack')">
+                        <span class="action-icon">⚔️</span>
+                        <span class="action-name">Атака</span>
+                    </button>
+                    <button class="battle-btn defense-btn" onclick="playerAction('defense')">
+                        <span class="action-icon">🛡️</span>
+                        <span class="action-name">Защита</span>
+                    </button>
+                    <button class="battle-btn magic-btn" onclick="playerAction('magic')">
+                        <span class="action-icon">✨</span>
+                        <span class="action-name">Магия</span>
+                    </button>
+                </div>
+                
+                <div class="battle-log" id="modalBattleLog"></div>
             </div>
         </div>
     </div>

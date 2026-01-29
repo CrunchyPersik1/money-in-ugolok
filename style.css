@@ -2832,3 +2832,244 @@ body::before {
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
+
+/* PvP модальное окно */
+.pvp-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+}
+
+.pvp-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pvp-modal-content {
+    background: var(--bg-dark);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-neon);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pvp-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pvp-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.pvp-modal-close {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pvp-modal-close:hover {
+    color: var(--neon-pink);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pvp-modal-body {
+    padding: 2rem;
+}
+
+.pvp-modal .arena-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.pvp-modal .player-info, 
+.pvp-modal .bot-info {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.pvp-modal .player-name, 
+.pvp-modal .bot-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.pvp-modal .player-worker, 
+.pvp-modal .bot-worker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.pvp-modal .vs-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-pink);
+    text-shadow: 0 0 20px var(--neon-pink);
+}
+
+.pvp-modal .battle-arena {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.pvp-modal .fighter {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pvp-modal .fighter-avatar {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.pvp-modal .fighter-stats {
+    margin-top: 1rem;
+}
+
+.pvp-modal .health-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.pvp-modal .health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ff6666);
+    transition: width 0.5s ease;
+    border-radius: 10px;
+}
+
+.pvp-modal .health-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.pvp-modal .battle-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.pvp-modal .battle-btn {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 100px;
+}
+
+.pvp-modal .battle-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-neon);
+}
+
+.pvp-modal .battle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pvp-modal .attack-btn {
+    background: linear-gradient(135deg, #ff4444, #ff6666);
+}
+
+.pvp-modal .defense-btn {
+    background: linear-gradient(135deg, #4444ff, #6666ff);
+}
+
+.pvp-modal .magic-btn {
+    background: linear-gradient(135deg, #ff44ff, #ff66ff);
+}
+
+.pvp-modal .action-icon {
+    font-size: 1.5rem;
+}
+
+.pvp-modal .action-name {
+    font-size: 0.9rem;
+}
+
+.pvp-modal .battle-log {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+    height: 150px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+.pvp-modal .battle-log-entry {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.pvp-modal .battle-log-entry:last-child {
+    border-bottom: none;
+}
