@@ -35,6 +35,13 @@
                 wins: 0,
                 losses: 0
             },
+            audio: {
+                enabled: false,
+                volume: 0.5,
+                currentTrack: null,
+                isPlaying: false,
+                visualizerEnabled: true
+            },
             achievements: [],
             version: "2.0" // Версия сохранения
         };
@@ -349,6 +356,366 @@
             { name: 'Дракон', level: 15, health: 140, attack: 35, defense: 20, magic: 18, icon: '🐲' },
             { name: 'Мондея', level: 20, health: 90, attack: 20, defense: 10, magic: 25, icon: '🔮' }
         ];
+
+        // Аудио система
+        let audioContext = null;
+        let analyser = null;
+        let source = null;
+        let dataArray = null;
+        let animationId = null;
+        let visualizerStyle = 'bars';
+        let particles = [];
+
+        // Инициализация аудио системы
+        function initAudioSystem() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                updateTrackInfo();
+            });
+            
+            audioPlayer.addEventListener('timeupdate', () => {
+                updateCurrentTime();
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                stopAudio();
+            });
+            
+            // Инициализация Web Audio API
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                source = audioContext.createMediaElementSource(audioPlayer);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+            }
+            
+            // Загрузка музыки из папки
+            loadMusicFromFolder();
+            
+            // Запуск визуализатора
+            if (gameData.audio.visualizerEnabled) {
+                startVisualizer();
+            }
+        }
+
+        // Загрузка музыки из папки
+        async function loadMusicFromFolder() {
+            // Популярные аудиоформаты
+            const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac'];
+            const musicFiles = [];
+            
+            // Проверяем стандартные пути
+            const possiblePaths = [
+                'music/',
+                './music/',
+                '../music/',
+                '/music/'
+            ];
+            
+            for (const path of possiblePaths) {
+                try {
+                    // Пробуем загрузить файлы из папки
+                    for (const ext of audioExtensions) {
+                        // Создаем тестовые файлы для проверки
+                        const testFiles = [
+                            'track1' + ext,
+                            'song' + ext,
+                            'music' + ext,
+                            'audio' + ext
+                        ];
+                        
+                        for (const file of testFiles) {
+                            const fullPath = path + file;
+                            try {
+                                const response = await fetch(fullPath, { method: 'HEAD' });
+                                if (response.ok) {
+                                    musicFiles.push({
+                                        name: file.replace(ext, ''),
+                                        path: fullPath
+                                    });
+                                }
+                            } catch (e) {
+                                // Файл не найден, продолжаем поиск
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Путь не найден, продолжаем
+                }
+            }
+            
+            // Если нашли файлы, добавляем их в плейлист
+            if (musicFiles.length > 0) {
+                gameData.audio.enabled = true;
+                gameData.audio.currentTrack = musicFiles[0];
+                loadTrack(musicFiles[0].path);
+                showNotification(`🎵 Найдено ${musicFiles.length} треков в папке music!`, 'success');
+            } else {
+                // Создаем плейлист по умолчанию (можно добавить онлайн треки)
+                showNotification('🎵 Папка music не найдена. Загрузите музыку вручную.', 'info');
+            }
+        }
+
+        // Загрузка трека
+        function loadTrack(trackPath) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = trackPath;
+            
+            // Извлекаем имя файла из пути
+            const fileName = trackPath.split('/').pop().split('\\').pop();
+            document.getElementById('trackName').textContent = fileName;
+            
+            gameData.audio.currentTrack = trackPath;
+        }
+
+        // Управление воспроизведением
+        function togglePlayPause() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            if (gameData.audio.isPlaying) {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                gameData.audio.isPlaying = false;
+            } else {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                gameData.audio.isPlaying = true;
+                
+                if (!animationId && gameData.audio.visualizerEnabled) {
+                    startVisualizer();
+                }
+            }
+        }
+
+        function stopAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            gameData.audio.isPlaying = false;
+        }
+
+        // Загрузка файла вручную
+        function loadAudioFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const audioPlayer = document.getElementById('audioPlayer');
+                const url = URL.createObjectURL(file);
+                
+                audioPlayer.src = url;
+                document.getElementById('trackName').textContent = file.name;
+                
+                gameData.audio.currentTrack = url;
+                gameData.audio.enabled = true;
+                
+                showNotification(`🎵 Загружен: ${file.name}`, 'success');
+            }
+        }
+
+        // Управление громкостью
+        function updateVolume(value) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const volume = value / 100;
+            
+            audioPlayer.volume = volume;
+            gameData.audio.volume = volume;
+        }
+
+        // Обновление информации о треке
+        function updateTrackInfo() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const duration = formatTime(audioPlayer.duration);
+            document.getElementById('duration').textContent = duration;
+        }
+
+        function updateCurrentTime() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const currentTime = formatTime(audioPlayer.currentTime);
+            document.getElementById('currentTime').textContent = currentTime;
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Визуализатор
+        function startVisualizer() {
+            const canvas = document.getElementById('visualizerCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Установка размера canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                
+                if (!analyser) return;
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Очистка canvas с эффектом следа
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                switch(visualizerStyle) {
+                    case 'bars':
+                        drawBars(ctx, canvas);
+                        break;
+                    case 'wave':
+                        drawWave(ctx, canvas);
+                        break;
+                    case 'circular':
+                        drawCircular(ctx, canvas);
+                        break;
+                    case 'particles':
+                        drawParticles(ctx, canvas);
+                        break;
+                }
+            }
+            
+            draw();
+        }
+
+        function drawBars(ctx, canvas) {
+            const barWidth = (canvas.width / dataArray.length) * 2.5;
+            let x = 0;
+            
+            for (let i = 0; i < dataArray.length; i++) {
+                const barHeight = (dataArray[i] / 255) * canvas.height * 0.7;
+                
+                // Градиент для полос
+                const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+                gradient.addColorStop(0, `hsl(${i * 360 / dataArray.length}, 100%, 50%)`);
+                gradient.addColorStop(1, `hsl(${i * 360 / dataArray.length}, 100%, 30%)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                
+                x += barWidth + 1;
+            }
+        }
+
+        function drawWave(ctx, canvas) {
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+            ctx.beginPath();
+            
+            const sliceWidth = canvas.width / dataArray.length;
+            let x = 0;
+            
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height / 2;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                x += sliceWidth;
+            }
+            
+            ctx.stroke();
+        }
+
+        function drawCircular(ctx, canvas) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 50;
+            
+            for (let i = 0; i < dataArray.length; i++) {
+                const angle = (i / dataArray.length) * Math.PI * 2;
+                const barHeight = (dataArray[i] / 255) * radius;
+                
+                const x1 = centerX + Math.cos(angle) * radius;
+                const y1 = centerY + Math.sin(angle) * radius;
+                const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+                const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+                
+                ctx.strokeStyle = `hsl(${i * 360 / dataArray.length}, 100%, 50%)`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        function drawParticles(ctx, canvas) {
+            // Создаем новые частицы на основе аудио
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            
+            if (average > 50 && particles.length < 100) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: -Math.random() * 10 - 5,
+                    size: Math.random() * 5 + 2,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    life: 1
+                });
+            }
+            
+            // Обновляем и рисуем частицы
+            particles = particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.2; // гравитация
+                particle.life -= 0.01;
+                
+                if (particle.life > 0) {
+                    ctx.globalAlpha = particle.life;
+                    ctx.fillStyle = particle.color;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        // Управление визуализатором
+        function toggleVisualizer() {
+            gameData.audio.visualizerEnabled = !gameData.audio.visualizerEnabled;
+            
+            if (gameData.audio.visualizerEnabled) {
+                startVisualizer();
+                document.getElementById('vizToggle').innerHTML = '<i class="fas fa-eye-slash"></i> Скрыть';
+            } else {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                document.getElementById('vizToggle').innerHTML = '<i class="fas fa-eye"></i> Визуализатор';
+            }
+        }
+
+        function changeVisualizerStyle(style) {
+            visualizerStyle = style;
+        }
 
         // Применить тему
         function applyTheme(themeId) {
@@ -2549,6 +2916,9 @@ v1.0.0 (2026-01-26)
             updateStamina();
             updatePvpStats();
             checkPvpUnlock();
+            
+            // Аудио система инициализация
+            initAudioSystem();
             
             // Запускаем пассивный доход
             startPassiveIncome();
