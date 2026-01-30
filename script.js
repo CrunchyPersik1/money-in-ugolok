@@ -3628,13 +3628,19 @@ function startExperienceTimer() {
         }
         
         if (gameData.workers.length > 0) {
-            console.log(`Опыт: ${gameData.workers.length} рабочих, множитель: ${experienceMultiplier}`);
+            console.log(`=== ОПЫТ ===`);
+            console.log(`Рабочих: ${gameData.workers.length}, множитель: ${experienceMultiplier}`);
         }
         
-        gameData.workers.forEach(worker => {
+        gameData.workers.forEach((worker, index) => {
             // ВСЕ рабочие получают опыт, включая редких и эксклюзивных
             const experienceGain = (worker.income / 10) * experienceMultiplier;
+            const oldExp = worker.experience;
             worker.experience += experienceGain;
+            
+            if (gameData.workers.length > 0 && index < 3) { // Показываем только первых 3 рабочих
+                console.log(`${worker.name}: +${experienceGain.toFixed(2)} опыта (${oldExp} → ${worker.experience}/${worker.maxExperience})`);
+            }
             
             // Проверяем повышение уровня
             if (worker.experience >= worker.maxExperience) {
@@ -3669,11 +3675,23 @@ function startPassiveIncome() {
         
         // Обновляем баланс с учетом бонусов
         const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
-        gameData.balance += totalWithBonus / 20; // Делим на 20 так как обновляем 20 раз в секунду
+        const incomeToAdd = totalWithBonus / 20; // Делим на 20 так как обновляем 20 раз в секунду
         
-        // Добавляем отладку
-        if (gameData.totalIncomePerSecond > 0 && Math.random() < 0.1) { // 10% шанс показать лог
-            console.log(`Деньги: +${(totalWithBonus / 20).toFixed(2)} за тик, всего: ${gameData.balance.toFixed(2)}`);
+        // ВСЕГДА показываем лог если есть доход
+        if (gameData.totalIncomePerSecond > 0) {
+            console.log(`=== ДЕНЬГИ ===`);
+            console.log(`totalIncomePerSecond: ${gameData.totalIncomePerSecond}`);
+            console.log(`city.totalBonus: ${gameData.city.totalBonus}`);
+            console.log(`totalWithBonus: ${totalWithBonus}`);
+            console.log(`incomeToAdd: ${incomeToAdd}`);
+            console.log(`balance до: ${gameData.balance}`);
+        }
+        
+        gameData.balance += incomeToAdd;
+        
+        if (gameData.totalIncomePerSecond > 0) {
+            console.log(`balance после: ${gameData.balance}`);
+            console.log(`разница: ${incomeToAdd}`);
         }
         
         // Обновляем UI только если нужно
@@ -3775,29 +3793,6 @@ function updateBalance() {
     }
 }
 
-// Тестовая функция для добавления рабочего
-function addTestWorker() {
-    const worker = {
-        id: Date.now(),
-        name: 'Тестовый рабочий',
-        icon: '🤖',
-        income: 100,
-        level: 1,
-        experience: 0,
-        maxExperience: 100,
-        rarity: 'common',
-        style: 'normal'
-    };
-    
-    gameData.workers.push(worker);
-    updatePassiveIncome();
-    renderWorkers();
-    showNotification(`🤖 Добавлен тестовый рабочий! Доход: +${worker.income}/сек`, 'success');
-    
-    console.log(`Добавлен рабочий. Всего: ${gameData.workers.length}`);
-    console.log('Общий доход:', gameData.totalIncomePerSecond);
-}
-
         // Инициализация после приветствия
         function initGameAfterStart() {
             document.getElementById('gameContainer').style.display = 'block';
@@ -3827,19 +3822,6 @@ function addTestWorker() {
             // Запускаем пассивный доход
             startPassiveIncome();
             updatePassiveIncome();
-            
-            // Проверяем рабочих после инициализации
-            console.log(`=== ПОСЛЕ ИНИЦИАЛИЗАЦИИ ===`);
-            console.log(`Рабочих: ${gameData.workers.length}`);
-            if (gameData.workers.length === 0) {
-                console.log('НЕТ РАБОЧИХ! Добавляю тестовых...');
-                gameData.workers = [
-                    { name: 'Барсик', icon: '🐱', income: 10, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 1 },
-                    { name: 'Бензин', icon: '⛽', income: 15, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 2 }
-                ];
-                updatePassiveIncome();
-                showNotification('🔧 Добавлены тестовые рабочие!', 'warning');
-            }
             
             // Запускаем таймер опыта
             startExperienceTimer();
