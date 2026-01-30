@@ -3775,6 +3775,29 @@ function updateBalance() {
     }
 }
 
+// Тестовая функция для добавления рабочего
+function addTestWorker() {
+    const worker = {
+        id: Date.now(),
+        name: 'Тестовый рабочий',
+        icon: '🤖',
+        income: 100,
+        level: 1,
+        experience: 0,
+        maxExperience: 100,
+        rarity: 'common',
+        style: 'normal'
+    };
+    
+    gameData.workers.push(worker);
+    updatePassiveIncome();
+    renderWorkers();
+    showNotification(`🤖 Добавлен тестовый рабочий! Доход: +${worker.income}/сек`, 'success');
+    
+    console.log(`Добавлен рабочий. Всего: ${gameData.workers.length}`);
+    console.log('Общий доход:', gameData.totalIncomePerSecond);
+}
+
         // Инициализация после приветствия
         function initGameAfterStart() {
             document.getElementById('gameContainer').style.display = 'block';
@@ -3804,6 +3827,19 @@ function updateBalance() {
             // Запускаем пассивный доход
             startPassiveIncome();
             updatePassiveIncome();
+            
+            // Проверяем рабочих после инициализации
+            console.log(`=== ПОСЛЕ ИНИЦИАЛИЗАЦИИ ===`);
+            console.log(`Рабочих: ${gameData.workers.length}`);
+            if (gameData.workers.length === 0) {
+                console.log('НЕТ РАБОЧИХ! Добавляю тестовых...');
+                gameData.workers = [
+                    { name: 'Барсик', icon: '🐱', income: 10, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 1 },
+                    { name: 'Бензин', icon: '⛽', income: 15, level: 1, experience: 0, maxExperience: 100, rarity: 'common', style: 'normal', id: Date.now() + 2 }
+                ];
+                updatePassiveIncome();
+                showNotification('🔧 Добавлены тестовые рабочие!', 'warning');
+            }
             
             // Запускаем таймер опыта
             startExperienceTimer();
@@ -5882,6 +5918,9 @@ function updateBalance() {
                                 gameData.workers.push(...defaultWorkers);
                                 showNotification('🔧 Рабочие восстановлены после ошибки!', 'warning');
                             }
+                            
+                            console.log(`Загружено рабочих: ${gameData.workers.length}`);
+                            console.log('Рабочие:', gameData.workers);
                             
                             document.getElementById('playerNameDisplay').textContent = gameData.playerName;
                             updateBalance();
