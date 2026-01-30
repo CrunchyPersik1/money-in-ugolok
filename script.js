@@ -1007,10 +1007,17 @@ function drawParticles(ctx, canvas) {
             const container = document.getElementById('pvpWorkersGrid');
             container.innerHTML = '';
             
+            console.log(`=== PvP РАБОЧИЕ ===`);
+            console.log(`Всего рабочих: ${gameData.workers.length}`);
+            console.log(`Выносливость: ${gameData.pvp.stamina}/30`);
+            
             const pvpWorkers = gameData.workers.filter(worker => {
                 const abilities = pvpAbilities[worker.name];
+                console.log(`Рабочий ${worker.name}: ${abilities ? 'HAS PvP' : 'NO PvP'}`);
                 return abilities; // Только рабочие с PvP способностями
             });
+            
+            console.log(`PvP рабочих найдено: ${pvpWorkers.length}`);
             
             if (pvpWorkers.length === 0) {
                 container.innerHTML = `
@@ -1055,7 +1062,12 @@ function drawParticles(ctx, canvas) {
 
         // Выбор рабочего для PvP
         function selectPvpWorker(worker) {
+            console.log(`=== ВЫБОР PvP РАБОЧЕГО ===`);
+            console.log(`Пытаюсь выбрать: ${worker.name}`);
+            console.log(`Выносливость: ${gameData.pvp.stamina}/30`);
+            
             if (gameData.pvp.stamina < 5) {
+                console.log('НЕДОСТАТОЧНО ВЫНОСЛИВОСТИ!');
                 showNotification('Недостаточно выносливости! Нужно 5 очков.', 'error');
                 return;
             }
@@ -1063,8 +1075,16 @@ function drawParticles(ctx, canvas) {
             selectedPvpWorker = worker;
             gameData.pvp.selectedWorker = worker;
             
+            console.log(`Рабочий ${worker.name} выбран для PvP!`);
+            
             // Показываем кнопку начала битвы
-            document.getElementById('battleStartContainer').style.display = 'block';
+            const battleContainer = document.getElementById('battleStartContainer');
+            if (battleContainer) {
+                battleContainer.style.display = 'block';
+                console.log('Кнопка битвы показана');
+            } else {
+                console.log('ОШИБКА: battleStartContainer не найден!');
+            }
             
             // Обновляем выделение рабочих
             renderPvpWorkers();
