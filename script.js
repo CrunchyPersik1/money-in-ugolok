@@ -346,19 +346,107 @@
                 attack: 20,
                 defense: 10,
                 magic: 25,
-                attackName: 'Накладываемая боль',
+                attackName: 'Геометрическая атака',
                 defenseName: 'Понижение защиты',
-                magicName: 'Геометрическая прогрессия'
+                magicName: 'Накладываемая боль'
+            },
+            // Новые рабочие для PvP
+            'Найтвинг': {
+                health: 100,
+                attack: 19,
+                defense: 9,
+                magic: 7,
+                attackName: 'Ночной удар',
+                defenseName: 'Бэтмобиль',
+                magicName: 'Бэт-сигнал'
+            },
+            'Вогонь': {
+                health: 95,
+                attack: 21,
+                defense: 6,
+                magic: 5,
+                attackName: 'Огненный шар',
+                defenseName: 'Огненная стена',
+                magicName: 'Воспламенение'
+            },
+            'Кефир': {
+                health: 90,
+                attack: 17,
+                defense: 8,
+                magic: 6,
+                attackName: 'Кислая атака',
+                defenseName: 'Молочная защита',
+                magicName: 'Брожение'
+            },
+            'Лис': {
+                health: 100,
+                attack: 18,
+                defense: 10,
+                magic: 4,
+                attackName: 'Хитрый укус',
+                defenseName: 'Лисья хитрость',
+                magicName: 'Обман'
+            },
+            'Фермер': {
+                health: 105,
+                attack: 16,
+                defense: 11,
+                magic: 4,
+                attackName: 'Урожайный удар',
+                defenseName: 'Защита поля',
+                magicName: 'Рост'
+            },
+            'Донат': {
+                health: 85,
+                attack: 25,
+                defense: 5,
+                magic: 8,
+                attackName: 'Денежный дождь',
+                defenseName: 'Золотой щит',
+                magicName: 'Инвестиция'
+            },
+            'Крипта': {
+                health: 95,
+                attack: 22,
+                defense: 7,
+                magic: 6,
+                attackName: 'Волатильность',
+                defenseName: 'Блокчейн',
+                magicName: 'Майнинг'
             }
         };
 
         // Боты для PvP
         const pvpBots = [
+            // Уровень 1-5
             { name: 'Барсик', level: 1, health: 100, attack: 15, defense: 10, magic: 5, icon: '🐱' },
             { name: 'Бензин', level: 5, health: 90, attack: 20, defense: 8, magic: 3, icon: '⛽' },
+            { name: 'Майн', level: 3, health: 110, attack: 18, defense: 12, magic: 2, icon: '⛏️' },
+            { name: 'Донат', level: 4, health: 85, attack: 25, defense: 5, magic: 8, icon: '💰' },
+            { name: 'Крипта', level: 5, health: 95, attack: 22, defense: 7, magic: 6, icon: '🪙' },
+            { name: 'Фермер', level: 2, health: 105, attack: 16, defense: 11, magic: 4, icon: '🌾' },
+            { name: 'Найтвинг', level: 4, health: 100, attack: 19, defense: 9, magic: 7, icon: '🦇' },
+            { name: 'Вогонь', level: 3, health: 95, attack: 21, defense: 6, magic: 5, icon: '🔥' },
+            { name: 'Кефир', level: 2, health: 90, attack: 17, defense: 8, magic: 6, icon: '🥛' },
+            { name: 'Лис', level: 4, health: 100, attack: 18, defense: 10, magic: 4, icon: '🦊' },
+            
+            // Уровень 6-10
             { name: 'Астрал', level: 10, health: 120, attack: 20, defense: 15, magic: 12, icon: '🌟' },
             { name: 'Дракон', level: 15, health: 140, attack: 35, defense: 20, magic: 18, icon: '🐲' },
-            { name: 'Мондея', level: 20, health: 90, attack: 20, defense: 10, magic: 25, icon: '🔮' }
+            { name: 'Мондея', level: 20, health: 90, attack: 20, defense: 10, magic: 25, icon: '🔮' },
+            { name: 'Бомж Валера', level: 8, health: 110, attack: 23, defense: 9, magic: 3, icon: '🧔' },
+            { name: 'Накс', level: 7, health: 105, attack: 24, defense: 8, magic: 4, icon: '💊' },
+            { name: 'Арбузаня', level: 9, health: 115, attack: 20, defense: 12, magic: 6, icon: '🍉' },
+            { name: 'Квас', level: 6, health: 100, attack: 22, defense: 7, magic: 5, icon: '🥤' },
+            { name: 'Точка', level: 8, health: 95, attack: 25, defense: 6, magic: 7, icon: '🔴' },
+            { name: 'Гусь', level: 7, health: 105, attack: 21, defense: 9, magic: 4, icon: '🦢' },
+            { name: 'Годжо', level: 10, health: 110, attack: 26, defense: 8, magic: 8, icon: '👺' },
+            
+            // Уровень 11-20
+            { name: 'Ромеро', level: 12, health: 125, attack: 28, defense: 11, magic: 10, icon: '🧛' },
+            { name: 'Комшот', level: 18, health: 130, attack: 32, defense: 14, magic: 15, icon: '💻' },
+            { name: 'Костяшка', level: 15, health: 120, attack: 30, defense: 12, magic: 12, icon: '🎲' },
+            { name: 'Микроволнiвка', level: 20, health: 135, attack: 35, defense: 16, magic: 20, icon: '🌀' }
         ];
 
         // Аудио система
@@ -1105,11 +1193,25 @@ function drawParticles(ctx, canvas) {
             }
             
             // Выбираем бота
-            const botLevel = Math.min(Math.floor(selectedPvpWorker.level / 5) + 1, 5);
-            const availableBots = pvpBots.filter(bot => bot.level <= botLevel);
-            const bot = availableBots[Math.floor(Math.random() * availableBots.length)];
+            const workerLevel = selectedPvpWorker.level;
+            console.log(`Уровень работника: ${workerLevel}`);
             
-            console.log(`Выбран бот: ${bot.name} (уровень ${bot.level}) для работника ${selectedPvpWorker.name} (уровень ${selectedPvpWorker.level})`);
+            // Выбираем ботов примерно равного уровня (±2 уровня)
+            const minLevel = Math.max(1, workerLevel - 2);
+            const maxLevel = Math.min(20, workerLevel + 2);
+            
+            const availableBots = pvpBots.filter(bot => bot.level >= minLevel && bot.level <= maxLevel);
+            console.log(`Доступно ботов уровней ${minLevel}-${maxLevel}: ${availableBots.length} штук`);
+            
+            let bot;
+            if (availableBots.length === 0) {
+                // Если нет подходящих, берем любых
+                bot = pvpBots[Math.floor(Math.random() * pvpBots.length)];
+                console.log(`Нет подходящих ботов, выбран случайный: ${bot.name}`);
+            } else {
+                bot = availableBots[Math.floor(Math.random() * availableBots.length)];
+                console.log(`Выбран бот: ${bot.name} (уровень ${bot.level}) для работника ${selectedPvpWorker.name} (уровень ${selectedPvpWorker.level})`);
+            }
             
             // Начинаем битву в модальном окне
             startBattleInModal(selectedPvpWorker, bot);
