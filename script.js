@@ -981,7 +981,10 @@ function drawParticles(ctx, canvas) {
                     gameData.pvp.unlocked = true;
                     showNotification('⚔️ PvP Арена разблокирована! Доступна новая вкладка!', 'success');
                 }
-                document.getElementById('pvp-tab-btn').style.display = 'flex';
+                const pvpTabBtn = document.getElementById('pvp-tab-btn');
+                if (pvpTabBtn) {
+                    pvpTabBtn.style.display = 'flex';
+                }
             }
         }
 
@@ -3749,6 +3752,7 @@ function updateBalance() {
             updatePassiveIncome();
             renderUpgrades();
             updateStats();
+            updateCityBonusDisplay(); // Обновляем бонус города после инициализации DOM
             
             // PvP инициализация
             updateStamina();
@@ -4528,23 +4532,18 @@ function updateBalance() {
 
         // Обновить отображение бонуса города
         function updateCityBonusDisplay() {
-            const bonus = calculateCityBonus();
-            const bonusPercent = gameData.city.totalBonusPercent || 0;
+            const bonusPercent = gameData.city.totalBonusPercent;
+            const cityBonusPercentElement = document.getElementById('cityBonusPercent');
+            const cityBonusDisplayElement = document.getElementById('cityBonusDisplay');
             
-            document.getElementById('cityBonusPercent').textContent = bonusPercent;
+            if (cityBonusPercentElement) {
+                cityBonusPercentElement.textContent = bonusPercent;
+            }
             
-            if (bonusPercent > 0) {
-                document.getElementById('cityBonusDisplay').style.display = 'flex';
-                
-                if (bonusPercent >= (MAX_CITY_MULTIPLIER - 1) * 100) {
-                    document.getElementById('cityBonusDisplay').style.background = 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)';
-                    document.getElementById('cityBonusDisplay').innerHTML = `
-                        <span class="bonus-icon">⚠️</span>
-                        <span>Максимальный бонус города достигнут!</span>
-                    `;
-                }
-            } else {
-                document.getElementById('cityBonusDisplay').style.display = 'none';
+            if (bonusPercent > 0 && cityBonusDisplayElement) {
+                cityBonusDisplayElement.style.display = 'flex';
+            } else if (cityBonusDisplayElement) {
+                cityBonusDisplayElement.style.display = 'none';
             }
         }
 
@@ -5846,7 +5845,7 @@ function updateBalance() {
                             document.getElementById('playerNameDisplay').textContent = gameData.playerName;
                             updateBalance();
                             updatePassiveIncome();
-                            updateCityBonusDisplay();
+                            // updateCityBonusDisplay(); // Вызывается позже после инициализации DOM
                             
                             console.log('Игра загружена (версия 2.0)');
                         }
@@ -5897,7 +5896,7 @@ function updateBalance() {
             }
             
             // Проверяем разблокировку PvP после загрузки
-            checkPvpUnlock();
+            // checkPvpUnlock(); // Вызывается позже после инициализации DOM
         }
 
         // Экспорт сохранения
