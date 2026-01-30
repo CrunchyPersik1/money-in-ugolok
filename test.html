@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Money in Ugolok</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Тест Money in Ugolok</h1>
+    
+    <div class="test-section">
+        <h2>📊 Проверка функций</h2>
+        <button onclick="testWorkers()">Проверить рабочих</button>
+        <button onclick="testIncome()">Проверить доход</button>
+        <button onclick="testExperience()">Проверить опыт</button>
+        <button onclick="addTestWorker()">Добавить тестового рабочего</button>
+        <div id="status" class="status">Статус: Готов к тестированию</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>💰 Баланс</h2>
+        <div>Деньги: <span id="balance">0</span></div>
+        <div>Шарды: <span id="shardsBalance">0</span></div>
+        <div>Доход/сек: <span id="incomePerSecond">0</span></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>👷 Рабочие</h2>
+        <div id="workersInfo">Рабочих нет</div>
+    </div>
+
+    <script>
+        // Загружаем основные переменные и функции из script.js
+        let gameData = {
+            balance: 1000,
+            shards: 0,
+            workers: [],
+            totalIncomePerSecond: 0,
+            city: { totalBonus: 1.0 },
+            rocket: { isFlying: false, worker: null }
+        };
+        
+        let gameSettings = { icon: "💰" };
+        let prestigeData = { prestigeUpgrades: [] };
+        
+        const MAX_INCOME_PER_SECOND = 1000000000;
+        const MAX_CITY_MULTIPLIER = 100;
+
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return Math.floor(num).toString();
+        }
+
+        function getBuildingBonus(type) {
+            return 1.0; // Заглушка
+        }
+
+        function showNotification(message, type) {
+            console.log(`[${type}] ${message}`);
+            document.getElementById('status').textContent = `[${type}] ${message}`;
+        }
+
+        function updateBalance() {
+            const balanceElement = document.getElementById('balance');
+            if (balanceElement) {
+                balanceElement.textContent = formatNumber(Math.floor(gameData.balance));
+            }
+            
+            const shardsElement = document.getElementById('shardsBalance');
+            if (shardsElement) {
+                shardsElement.textContent = formatNumber(gameData.shards);
+            }
+        }
+
+        function updateIncomePerSecond() {
+            const incomeElement = document.getElementById('incomePerSecond');
+            if (incomeElement) {
+                const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
+                incomeElement.textContent = formatNumber(totalWithBonus);
+            }
+        }
+
+        function updatePassiveIncome() {
+            let totalIncome = 0;
+            
+            gameData.workers.forEach(worker => {
+                let workerIncome = worker.income;
+                const incomeMultiplier = Math.min(getBuildingBonus('incomeMultiplier'), MAX_CITY_MULTIPLIER);
+                workerIncome = workerIncome * incomeMultiplier;
+                totalIncome += workerIncome;
+            });
+            
+            gameData.totalIncomePerSecond = Math.min(totalIncome, MAX_INCOME_PER_SECOND);
+            updateIncomePerSecond();
+        }
+
+        function startExperienceTimer() {
+            setInterval(() => {
+                let experienceMultiplier = Math.min(getBuildingBonus('experienceMultiplier'), MAX_CITY_MULTIPLIER);
+                
+                gameData.workers.forEach(worker => {
+                    const experienceGain = (worker.income / 10) * experienceMultiplier;
+                    worker.experience += experienceGain;
+                    
+                    if (worker.experience >= worker.maxExperience) {
+                        worker.experience = worker.experience - worker.maxExperience;
+                        worker.level++;
+                        worker.maxExperience = Math.floor(worker.maxExperience * 1.5);
+                        worker.income = Math.floor(worker.income * 1.2);
+                        
+                        showNotification(`🎉 ${worker.name} достиг ${worker.level} уровня!`, 'success');
+                        updatePassiveIncome();
+                        updateWorkersInfo();
+                    }
+                });
+            }, 1000);
+        }
+
+        let lastGameUpdate = 0;
+        function startPassiveIncome() {
+            setInterval(() => {
+                const now = Date.now();
+                if (now - lastGameUpdate < 50) return;
+                lastGameUpdate = now;
+                
+                const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
+                gameData.balance += totalWithBonus / 20;
+                
+                updateBalance();
+                updateIncomePerSecond();
+            }, 50);
+        }
+
+        function updateWorkersInfo() {
+            const workersInfo = document.getElementById('workersInfo');
+            if (gameData.workers.length === 0) {
+                workersInfo.innerHTML = 'Рабочих нет';
+            } else {
+                let html = `<div>Всего рабочих: ${gameData.workers.length}</div>`;
+                gameData.workers.forEach(worker => {
+                    const expPercent = worker.maxExperience > 0 ? Math.min((worker.experience / worker.maxExperience) * 100, 100) : 0;
+                    html += `
+                        <div style="margin: 5px 0; padding: 5px; background: #333; border-radius: 4px;">
+                            <strong>${worker.icon} ${worker.name}</strong> (ур. ${worker.level}) - 
+                            доход: ${formatNumber(worker.income)}/сек - 
+                            опыт: ${Math.floor(worker.experience)}/${worker.maxExperience} (${expPercent.toFixed(1)}%)
+                        </div>
+                    `;
+                });
+                workersInfo.innerHTML = html;
+            }
+        }
+
+        // Тестовые функции
+        function testWorkers() {
+            updateWorkersInfo();
+            showNotification(`Рабочих: ${gameData.workers.length}`, 'info');
+        }
+
+        function testIncome() {
+            updatePassiveIncome();
+            showNotification(`Доход: ${formatNumber(gameData.totalIncomePerSecond)}/сек`, 'info');
+        }
+
+        function testExperience() {
+            showNotification(`Таймер опыта запущен`, 'info');
+        }
+
+        function addTestWorker() {
+            const worker = {
+                id: Date.now(),
+                name: 'Тестовый рабочий',
+                icon: '🤖',
+                income: 100,
+                level: 1,
+                experience: 0,
+                maxExperience: 100,
+                rarity: 'common'
+            };
+            gameData.workers.push(worker);
+            updatePassiveIncome();
+            updateWorkersInfo();
+            showNotification(`Добавлен рабочий: ${worker.name}`, 'success');
+        }
+
+        // Запускаем таймеры при загрузке
+        window.onload = function() {
+            updateBalance();
+            updateIncomePerSecond();
+            updateWorkersInfo();
+            startExperienceTimer();
+            startPassiveIncome();
+            showNotification('Игра инициализирована!', 'success');
+        };
+    </script>
+</body>
+</html>
