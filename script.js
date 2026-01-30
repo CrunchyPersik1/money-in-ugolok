@@ -1150,6 +1150,8 @@ function drawParticles(ctx, canvas) {
             const abilities = pvpAbilities[worker.name];
             
             battleState = {
+                selectedWorker: worker,
+                bot: bot,
                 playerHealth: abilities.health,
                 playerMaxHealth: abilities.health,
                 botHealth: bot.health,
@@ -1365,7 +1367,7 @@ function drawParticles(ctx, canvas) {
                     
                 case 'magic':
                     if (battleState.selectedWorker.name === 'Мондея') {
-                        battleState.painStack++;
+                        battleState.painStack = (battleState.painStack || 0) + 1;
                         logMessage = `✨ ${battleState.selectedWorker.name} использует ${abilities.magicName}! Боль возрастает (${battleState.painStack}x)`;
                     } else {
                         damage = abilities.magic;
@@ -1387,7 +1389,7 @@ function drawParticles(ctx, canvas) {
             // Сброс защиты после хода
             battleState.botDefense = Math.max(0, battleState.botDefense - 5);
             
-            updateBattleUIModal();
+            // updateBattleUIModal(); // TODO: Создать эту функцию
             
             // Проверка победы
             if (battleState.botHealth <= 0) {
@@ -1397,14 +1399,14 @@ function drawParticles(ctx, canvas) {
             
             // Ход бота
             battleState.turn = 'bot';
-            setTimeout(() => botActionModal(), 1500);
+            setTimeout(() => botAction(), 1500);
         }
 
         // Действие бота
         function botAction() {
             if (!battleState.battleActive) return;
             
-            const bot = battleState.selectedBot;
+            const bot = battleState.bot;
             let damage = 0;
             let logMessage = '';
             
@@ -1431,20 +1433,20 @@ function drawParticles(ctx, canvas) {
                     break;
             }
             
-            addBattleLog(logMessage);
+            addBattleLogModal(logMessage);
             
             // Сброс защиты после хода
             battleState.playerDefense = Math.max(0, battleState.playerDefense - 5);
             
             // Проверка поражения
             if (battleState.playerHealth <= 0) {
-                endBattle(false);
+                endBattleModal(false);
                 return;
             }
             
             // Возврат хода игроку
             battleState.turn = 'player';
-            updateBattleUI(); // Обновляем UI после смены хода
+            // updateBattleUI(); // TODO: Создать эту функцию
         }
 
         // Обновление UI битвы
