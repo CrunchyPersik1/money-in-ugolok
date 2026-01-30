@@ -4015,7 +4015,7 @@ v1.0.0 (2026-01-26)
                 level: exclusive.level,
                 income: exclusive.income,
                 experience: 0,
-                maxExperience: 0,
+                maxExperience: 100 * exclusive.level,
                 rarity: exclusive.rarity,
                 style: 'normal',
                 isRare: true,
@@ -4910,7 +4910,7 @@ v1.0.0 (2026-01-26)
                     level: reward.level || 1,
                     income: finalIncome,
                     experience: 0,
-                    maxExperience: reward.rarity === 'beta-tester' || reward.rarity === 'exclusive' ? 0 : 100,
+                    maxExperience: reward.rarity === 'beta-tester' || reward.rarity === 'exclusive' ? 100 * (reward.level || 1) : 100,
                     rarity: reward.rarity || 'common',
                     style: reward.style || 'normal',
                     isRare: ['rare', 'epic', 'legendary', 'mythic', 'cosmic', 'divine', 'exotic', 'ultimate', 'beta-tester', 'exclusive'].includes(reward.rarity || ''),
@@ -5138,6 +5138,10 @@ v1.0.0 (2026-01-26)
                 // Престиж бонус к опыту
                 if (prestigeData.prestigeUpgrades.includes('experience_boost')) {
                     experienceMultiplier *= 1.5; // +50% к скорости получения опыта
+                }
+                
+                if (gameData.workers.length > 0) {
+                    console.log(`Опыт: ${gameData.workers.length} рабочих, множитель: ${experienceMultiplier}`);
                 }
                 
                 gameData.workers.forEach(worker => {
@@ -5650,6 +5654,11 @@ v1.0.0 (2026-01-26)
                 const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
                 gameData.balance += totalWithBonus / 20; // Делим на 20 так как обновляем 20 раз в секунду
                 
+                // Добавляем отладку
+                if (gameData.totalIncomePerSecond > 0 && Math.random() < 0.1) { // 10% шанс показать лог
+                    console.log(`Деньги: +${(totalWithBonus / 20).toFixed(2)} за тик, всего: ${gameData.balance.toFixed(2)}`);
+                }
+                
                 // Обновляем UI только если нужно
                 updateBalance();
                 updateIncomePerSecond();
@@ -5664,6 +5673,9 @@ v1.0.0 (2026-01-26)
         // Обновление пассивного дохода
         function updatePassiveIncome() {
             let totalIncome = 0;
+            
+            console.log(`=== Обновление дохода ===`);
+            console.log(`Рабочих: ${gameData.workers.length}`);
             
             gameData.workers.forEach(worker => {
                 let workerIncome = worker.income;
@@ -5680,6 +5692,8 @@ v1.0.0 (2026-01-26)
                 workerIncome = workerIncome * globalMultiplier;
                 
                 totalIncome += workerIncome;
+                
+                console.log(`${worker.name}: ${worker.income} -> ${workerIncome.toFixed(2)}/сек`);
             });
             
             // Добавляем бонус от ракетки, если она в полете
@@ -5692,6 +5706,7 @@ v1.0.0 (2026-01-26)
                 }
                 
                 totalIncome = totalIncome * rocketBonus;
+                console.log(`Бонус ракетки: x${rocketBonus}`);
             }
             
             totalIncome = totalIncome * Math.min(gameData.city.totalBonus, MAX_CITY_MULTIPLIER);
@@ -5702,6 +5717,9 @@ v1.0.0 (2026-01-26)
             }
             
             gameData.totalIncomePerSecond = Math.min(totalIncome, MAX_INCOME_PER_SECOND);
+            
+            console.log(`Итоговый доход: ${gameData.totalIncomePerSecond}/сек`);
+            console.log(`Баланс: ${gameData.balance}`);
             
             updateIncomePerSecond();
         }
