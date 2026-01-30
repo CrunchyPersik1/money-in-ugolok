@@ -3141,7 +3141,7 @@ body::before {
 /* Кнопка магазина */
 .shop-button-container {
     position: fixed;
-    top: 60%;
+    top: 70%;
     right: 20px;
     transform: translateY(-50%);
     z-index: 1001;

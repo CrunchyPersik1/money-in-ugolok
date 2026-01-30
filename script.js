@@ -2091,16 +2091,6 @@ v1.0.0 (2026-01-26)
                     priceType: 'money',
                     type: 'deal',
                     action: () => purchaseStarterPack()
-                },
-                {
-                    id: 'mega_boost',
-                    title: 'МЕГА УСКОРЕНИЕ',
-                    badge: 'x2',
-                    description: 'Все рабочие работают в 2 раза быстрее на 1 час',
-                    price: 5000000,
-                    priceType: 'money',
-                    type: 'deal',
-                    action: () => purchaseMegaBoost()
                 }
             ],
             pvp: [
@@ -2123,14 +2113,14 @@ v1.0.0 (2026-01-26)
                     action: () => purchaseBarsikPvp()
                 },
                 {
-                    id: 'pvp_master',
-                    title: 'PvP Мастер',
+                    id: 'pvp_warrior',
+                    title: 'Хирохито',
                     badge: 'ПРО',
-                    description: 'Рабочий "Гладиатор" 10 уровня для PvP',
-                    price: 50,
+                    description: 'Рабочий "Хирохито" 4 уровня для PvP',
+                    price: 30,
                     priceType: 'shards',
                     type: 'pvp',
-                    action: () => purchasePvpMaster()
+                    action: () => purchasePvpWarrior()
                 },
                 {
                     id: 'instant_heal',
@@ -2166,24 +2156,24 @@ v1.0.0 (2026-01-26)
                     action: () => purchaseMondeaShards()
                 },
                 {
-                    id: 'dragon_legend',
-                    title: 'Дракон',
+                    id: 'phoenix_legend',
+                    title: 'ФНМ',
                     badge: 'ЛЕГЕНДА',
-                    description: 'Легендарный дракон с огромным доходом',
-                    price: 25,
+                    description: 'Легендарный ФНМ с молниями',
+                    price: 20,
                     priceType: 'shards',
                     type: 'worker',
-                    action: () => purchaseDragonLegend()
+                    action: () => purchasePhoenixLegend()
                 },
                 {
-                    id: 'cyber_ninja',
-                    title: 'Кибер Ниндзя',
+                    id: 'ice_mage',
+                    title: 'Маттеокеллер',
                     badge: 'ЭКСКЛЮЗИВ',
-                    description: 'Кибернетический ниндзя с критическими ударами',
-                    price: 30000000,
+                    description: 'Эксклюзивный Маттеокеллер с колбами',
+                    price: 25000000,
                     priceType: 'money',
                     type: 'worker',
-                    action: () => purchaseCyberNinja()
+                    action: () => purchaseIceMage()
                 }
             ],
             shards: [
@@ -2251,24 +2241,6 @@ v1.0.0 (2026-01-26)
             const container = document.getElementById('shopScrollContainer');
             container.innerHTML = '';
             
-            // Добавляем тестовый товар для проверки
-            const testItem = document.createElement('div');
-            testItem.className = 'shop-item deal';
-            testItem.innerHTML = `
-                <div class="shop-item-header">
-                    <div class="shop-item-title">ТЕСТОВЫЙ ТОВАР</div>
-                    <div class="shop-item-badge">ТЕСТ</div>
-                </div>
-                <div class="shop-item-description">Это тестовый товар для проверки магазина</div>
-                <div class="shop-item-price">
-                    <span>100 💰</span>
-                </div>
-                <button class="shop-item-button" onclick="alert('Магазин работает!')">
-                    ТЕСТ
-                </button>
-            `;
-            container.appendChild(testItem);
-            
             // Добавляем разделители категорий
             const categories = [
                 { key: 'deals', title: '🔥 ГОРЯЧИЕ АКЦИИ', type: 'deal' },
@@ -2288,8 +2260,8 @@ v1.0.0 (2026-01-26)
                 const items = shopItems[category.key] || [];
                 
                 items.forEach(item => {
-                    // Проверяем не куплен ли товар
-                    if (!gameData.shop.purchasedItems.includes(item.id)) {
+                    // Шардовые пакеты можно покупать многократно, остальные товары - единоразово
+                    if (item.type === 'shards' || !gameData.shop.purchasedItems.includes(item.id)) {
                         const shopItem = createShopItemElement(item);
                         container.appendChild(shopItem);
                     }
@@ -2370,10 +2342,16 @@ v1.0.0 (2026-01-26)
                 return;
             }
             
-            // Проверяем не куплен ли уже товар
-            if (gameData.shop.purchasedItems.includes(itemId)) {
-                showNotification('Этот товар уже куплен!', 'error');
-                return;
+            // Шарды можно покупать многократно, остальные товары - единоразово
+            if (item.type !== 'shards') {
+                // Проверяем не куплен ли уже товар
+                if (gameData.shop.purchasedItems.includes(itemId)) {
+                    showNotification('Этот товар уже куплен!', 'error');
+                    return;
+                }
+                
+                // Добавляем товар в купленные
+                gameData.shop.purchasedItems.push(itemId);
             }
             
             // Списываем средства
@@ -2382,9 +2360,6 @@ v1.0.0 (2026-01-26)
             } else {
                 gameData.shards -= item.price;
             }
-            
-            // Добавляем товар в купленные
-            gameData.shop.purchasedItems.push(itemId);
             
             // Выполняем действие
             item.action();
@@ -2403,17 +2378,22 @@ v1.0.0 (2026-01-26)
             gameData.balance += 500000;
             gameData.shards += 2;
             
-            // Добавляем 5 случайных рабочих
-            const randomWorkers = [
+            // Добавляем 5 случайных рабочих из существующих в игре
+            const existingWorkers = [
                 { name: 'Робот', icon: '🤖', income: 25, rarity: 'common' },
                 { name: 'Призрак', icon: '👻', income: 30, rarity: 'rare' },
                 { name: 'Вампир', icon: '🧛', income: 40, rarity: 'epic' },
                 { name: 'Циклоп', icon: '👁️', income: 35, rarity: 'rare' },
-                { name: 'Джинн', icon: '🧞', income: 50, rarity: 'epic' }
+                { name: 'Джинн', icon: '🧞', income: 50, rarity: 'epic' },
+                { name: 'Лис', icon: '🦊', income: 55, rarity: 'common' },
+                { name: 'Бомж Валера', icon: '🧔', income: 60, rarity: 'common' },
+                { name: 'Накс', icon: '💊', income: 65, rarity: 'common' },
+                { name: 'Арбузаня', icon: '🍉', income: 70, rarity: 'common' },
+                { name: 'Квас', icon: '🥤', income: 75, rarity: 'common' }
             ];
             
             for (let i = 0; i < 5; i++) {
-                const worker = randomWorkers[Math.floor(Math.random() * randomWorkers.length)];
+                const worker = existingWorkers[Math.floor(Math.random() * existingWorkers.length)];
                 const newWorker = {
                     id: Date.now() + i,
                     name: worker.name,
@@ -2433,44 +2413,21 @@ v1.0.0 (2026-01-26)
             updatePassiveIncome();
         }
 
-        function purchaseMegaBoost() {
-            // Увеличиваем доход всех рабочих в 2 раза на 1 час
-            gameData.workers.forEach(worker => {
-                worker.originalIncome = worker.income;
-                worker.income *= 2;
-            });
-            
-            showNotification('⚡ Мега ускорение активано! Все рабочие работают в 2 раза быстрее 1 час!', 'success');
-            updatePassiveIncome();
-            
-            // Возвращаем через 1 час
-            setTimeout(() => {
-                gameData.workers.forEach(worker => {
-                    if (worker.originalIncome) {
-                        worker.income = worker.originalIncome;
-                        delete worker.originalIncome;
-                    }
-                });
-                updatePassiveIncome();
-                showNotification('⏰ Мега ускорение закончилось!', 'info');
-            }, 3600000); // 1 час
-        }
-
-        function purchasePvpMaster() {
-            const gladiator = {
+        function purchasePvpWarrior() {
+            const warrior = {
                 id: Date.now(),
-                name: 'Гладиатор',
-                icon: '⚔️',
-                income: 200,
-                level: 10,
+                name: 'Хирохито',
+                icon: '👑',
+                income: 300,
+                level: 4,
                 experience: 0,
-                maxExperience: 1000,
-                rarity: 'legendary',
+                maxExperience: 400,
+                rarity: 'epic',
                 style: 'normal',
                 isRare: true
             };
-            gameData.workers.push(gladiator);
-            showNotification('⚔️ Получен рабочий "Гладиатор" 10 уровня!', 'success');
+            gameData.workers.push(warrior);
+            showNotification('👑 Получен рабочий "Хирохито" 4 уровня!', 'success');
             renderWorkers();
         }
 
@@ -2480,40 +2437,40 @@ v1.0.0 (2026-01-26)
             updateStamina();
         }
 
-        function purchaseDragonLegend() {
-            const dragon = {
+        function purchasePhoenixLegend() {
+            const fnm = {
                 id: Date.now(),
-                name: 'Дракон',
-                icon: '🐉',
-                income: 1500,
-                level: 15,
+                name: 'ФНМ',
+                icon: '⚡',
+                income: 600,
+                level: 6,
                 experience: 0,
-                maxExperience: 1500,
-                rarity: 'exclusive',
+                maxExperience: 600,
+                rarity: 'legendary',
                 style: 'normal',
                 isRare: true,
                 isSpecial: true
             };
-            gameData.workers.push(dragon);
-            showNotification('🐉 Получен легендарный Дракон!', 'success');
+            gameData.workers.push(fnm);
+            showNotification('⚡ Получен легендарный ФНМ!', 'success');
             renderWorkers();
         }
 
-        function purchaseCyberNinja() {
-            const ninja = {
+        function purchaseIceMage() {
+            const matteo = {
                 id: Date.now(),
-                name: 'Кибер Ниндзя',
-                icon: '🥷',
-                income: 800,
-                level: 12,
+                name: 'Маттеокеллер',
+                icon: '🧪',
+                income: 650,
+                level: 7,
                 experience: 0,
-                maxExperience: 1200,
-                rarity: 'mythic',
+                maxExperience: 700,
+                rarity: 'legendary',
                 style: 'normal',
                 isRare: true
             };
-            gameData.workers.push(ninja);
-            showNotification('🥷 Получен эксклюзивный Кибер Ниндзя!', 'success');
+            gameData.workers.push(matteo);
+            showNotification('🧪 Получен эксклюзивный Маттеокеллер!', 'success');
             renderWorkers();
         }
 
@@ -5184,12 +5141,20 @@ v1.0.0 (2026-01-26)
                 }
                 
                 gameData.workers.forEach(worker => {
-                    // ВСЕ рабочие получают опыт, включая редких
+                    // ВСЕ рабочие получают опыт, включая редких и эксклюзивных
                     const experienceGain = (worker.income / 10) * experienceMultiplier;
                     worker.experience += experienceGain;
                     
+                    // Проверяем повышение уровня
                     if (worker.experience >= worker.maxExperience) {
-                        worker.experience = worker.maxExperience;
+                        worker.experience = worker.experience - worker.maxExperience;
+                        worker.level++;
+                        worker.maxExperience = Math.floor(worker.maxExperience * 1.5);
+                        worker.income = Math.floor(worker.income * 1.2);
+                        
+                        showNotification(`🎉 ${worker.name} достиг ${worker.level} уровня!`, 'success');
+                        updatePassiveIncome();
+                        renderWorkers();
                     }
                 });
                 
