@@ -1106,7 +1106,10 @@ function drawParticles(ctx, canvas) {
             
             // Выбираем бота
             const botLevel = Math.min(Math.floor(selectedPvpWorker.level / 5) + 1, 5);
-            const bot = pvpBots[Math.min(botLevel - 1, pvpBots.length - 1)];
+            const availableBots = pvpBots.filter(bot => bot.level <= botLevel);
+            const bot = availableBots[Math.floor(Math.random() * availableBots.length)];
+            
+            console.log(`Выбран бот: ${bot.name} (уровень ${bot.level}) для работника ${selectedPvpWorker.name} (уровень ${selectedPvpWorker.level})`);
             
             // Начинаем битву в модальном окне
             startBattleInModal(selectedPvpWorker, bot);
@@ -1172,10 +1175,14 @@ function drawParticles(ctx, canvas) {
             document.getElementById('modalPlayerName').textContent = gameData.playerName;
             document.getElementById('modalPlayerIcon').textContent = worker.icon;
             document.getElementById('modalPlayerWorkerName').textContent = worker.name;
+            document.getElementById('modalPlayerAvatar').textContent = worker.icon;
+            document.getElementById('modalPlayerFighterName').textContent = worker.name;
             
-            document.getElementById('modalBotName').textContent = bot.name;
+            document.getElementById('modalBotName').textContent = 'Бот';
             document.getElementById('modalBotIcon').textContent = bot.icon;
             document.getElementById('modalBotWorkerName').textContent = bot.name;
+            document.getElementById('modalBotAvatar').textContent = bot.icon;
+            document.getElementById('modalBotFighterName').textContent = bot.name;
             
             // Показываем модальное окно
             document.getElementById('pvpModal').classList.add('show');
@@ -1192,6 +1199,9 @@ function drawParticles(ctx, canvas) {
             addBattleLogModal(`⚔️ Битва началась: ${worker.name} против ${bot.name}!`);
             addBattleLogModal(`📊 ${worker.name}: ${abilities.health} HP, ${abilities.attack} ATK, ${abilities.defense} DEF, ${abilities.magic} MAG`);
             addBattleLogModal(`📊 ${bot.name}: ${bot.health} HP, ${bot.attack} ATK, ${bot.defense} DEF, ${bot.magic} MAG`);
+            
+            // Первоначальное обновление UI
+            updateBattleUIModal();
         }
 
         // Добавление сообщения в лог битвы в модальном окне
@@ -1389,7 +1399,7 @@ function drawParticles(ctx, canvas) {
             // Сброс защиты после хода
             battleState.botDefense = Math.max(0, battleState.botDefense - 5);
             
-            // updateBattleUIModal(); // TODO: Создать эту функцию
+            updateBattleUIModal();
             
             // Проверка победы
             if (battleState.botHealth <= 0) {
@@ -1446,7 +1456,47 @@ function drawParticles(ctx, canvas) {
             
             // Возврат хода игроку
             battleState.turn = 'player';
-            // updateBattleUI(); // TODO: Создать эту функцию
+            updateBattleUIModal();
+        }
+
+        // Обновление UI битвы в модальном окне
+        function updateBattleUIModal() {
+            if (!battleState) return;
+            
+            // Здоровье игрока (рабочего)
+            const playerHealthPercent = (battleState.playerHealth / battleState.playerMaxHealth) * 100;
+            const playerHealthElement = document.getElementById('modalPlayerHealth');
+            const playerHealthTextElement = document.getElementById('modalPlayerHealthText');
+            
+            if (playerHealthElement) {
+                playerHealthElement.style.width = playerHealthPercent + '%';
+            }
+            if (playerHealthTextElement) {
+                playerHealthTextElement.textContent = `${battleState.playerHealth}/${battleState.playerMaxHealth}`;
+            }
+            
+            // Здоровье бота
+            const botHealthPercent = (battleState.botHealth / battleState.botMaxHealth) * 100;
+            const botHealthElement = document.getElementById('modalBotHealth');
+            const botHealthTextElement = document.getElementById('modalBotHealthText');
+            
+            if (botHealthElement) {
+                botHealthElement.style.width = botHealthPercent + '%';
+            }
+            if (botHealthTextElement) {
+                botHealthTextElement.textContent = `${battleState.botHealth}/${battleState.botMaxHealth}`;
+            }
+            
+            // Обновляем имена бойцов
+            const playerFighterName = document.getElementById('modalPlayerFighterName');
+            const botFighterName = document.getElementById('modalBotFighterName');
+            
+            if (playerFighterName && battleState.selectedWorker) {
+                playerFighterName.textContent = battleState.selectedWorker.name;
+            }
+            if (botFighterName && battleState.bot) {
+                botFighterName.textContent = battleState.bot.name;
+            }
         }
 
         // Обновление UI битвы
@@ -3973,7 +4023,7 @@ function updateBalance() {
             });
             
             sortedWorkers.forEach(worker => {
-                const isInRocket = gameData.rocket.worker && gameData.rocket.worker.id === worker.id;
+                const isInRocket = gameData.rocket.isFlying && gameData.rocket.worker && gameData.rocket.worker.id === worker.id;
                 const isSelected = gameData.rocket.worker && gameData.rocket.worker.id === worker.id;
                 
                 const workerCard = document.createElement('div');
