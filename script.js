@@ -3818,9 +3818,10 @@ v1.0.0 (2026-01-26)
             
             sortedWorkers.forEach(worker => {
                 const isInRocket = gameData.rocket.worker && gameData.rocket.worker.id === worker.id;
+                const isSelected = gameData.rocket.worker && gameData.rocket.worker.id === worker.id;
                 
                 const workerCard = document.createElement('div');
-                workerCard.className = `rocket-worker-card ${selectedRocketWorker && selectedRocketWorker.id === worker.id ? 'selected' : ''} ${isInRocket ? 'in-rocket' : ''}`;
+                workerCard.className = `rocket-worker-card ${isSelected ? 'selected' : ''} ${isInRocket ? 'in-rocket' : ''}`;
                 workerCard.onclick = () => {
                     if (!isInRocket && !gameData.rocket.isFlying) {
                         playSound('clickSound');
@@ -3852,21 +3853,22 @@ v1.0.0 (2026-01-26)
                 return;
             }
             
-            selectedRocketWorker = worker;
+            gameData.rocket.worker = worker;
             
             // Обновляем отображение
-            document.querySelectorAll('.rocket-worker-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            event?.currentTarget?.classList.add('selected');
+            renderRocketWorkers();
             
             // Обновляем информацию о выбранном рабочем
             updateSelectedRocketWorkerInfo(worker);
             
             // Активируем кнопку запуска
             const launchButton = document.getElementById('launchButton');
-            launchButton.disabled = false;
-            launchButton.textContent = `Запустить ${worker.name} в ракету`;
+            if (launchButton) {
+                launchButton.disabled = false;
+                launchButton.textContent = `Запустить ${worker.name} в ракету`;
+            }
+            
+            showNotification(`Выбран рабочий: ${worker.name}`, 'success');
         }
 
         // Обновление информации о выбранном рабочем для ракетки
@@ -3882,7 +3884,7 @@ v1.0.0 (2026-01-26)
 
         // Запуск ракетки
         function launchRocket() {
-            if (!selectedRocketWorker) {
+            if (!gameData.rocket.worker) {
                 showNotification('Выберите рабочего для запуска!', 'warning');
                 playSound('errorSound');
                 return;
@@ -3894,7 +3896,6 @@ v1.0.0 (2026-01-26)
                 return;
             }
             
-            gameData.rocket.worker = selectedRocketWorker;
             gameData.rocket.isFlying = true;
             gameData.rocket.launchTime = Date.now();
             gameData.rocket.dangerLevel = 0;
@@ -3902,7 +3903,7 @@ v1.0.0 (2026-01-26)
             gameData.rocket.flightIncomeMultiplier = 1.0;
             
             playSound('rocketSound');
-            showNotification(`${selectedRocketWorker.name} отправляется в космос!`, 'success');
+            showNotification(`${gameData.rocket.worker.name} отправляется в космос!`, 'success');
             
             // Обновляем интерфейс
             updateRocketInterface();
@@ -4068,7 +4069,7 @@ v1.0.0 (2026-01-26)
             document.getElementById('landButton').disabled = true;
             
             // Сбрасываем выбор
-            selectedRocketWorker = null;
+            gameData.rocket.worker = null;
             document.getElementById('selectedRocketWorkerInfo').innerHTML = `
                 <div class="selected-worker-icon">👨‍🚀</div>
                 <div class="selected-worker-name">Выберите рабочего</div>
