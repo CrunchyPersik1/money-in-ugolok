@@ -3868,6 +3868,9 @@ function updateBalance() {
 
         // Переключение вкладок
         function switchTab(tabName) {
+            console.log(`=== ПЕРЕКЛЮЧЕНИЕ ВКЛАДКИ ===`);
+            console.log(`Переключаюсь на: ${tabName}`);
+            
             playSound('clickSound');
             
             // Кэшируем элементы для оптимизации
@@ -3885,29 +3888,38 @@ function updateBalance() {
             if (activeTab) activeTab.classList.add('active');
             if (activeContent) activeContent.classList.add('active');
             
+            console.log(`Активная вкладка установлена: ${tabName}`);
+            
             // Оптимизированный рендеринг содержимого
             switch(tabName) {
                 case 'workers':
+                    console.log('Рендер рабочих...');
                     renderWorkers();
                     break;
                 case 'upgrades':
+                    console.log('Рендер улучшений...');
                     renderUpgrades();
                     break;
                 case 'rocket':
+                    console.log('Рендер ракеты...');
                     renderRocketWorkers();
                     updateRocketStats();
                     break;
                 case 'city':
+                    console.log('Рендер города...');
                     renderCity();
                     renderAvailableBuildings();
                     break;
                 case 'leaderboard':
+                    console.log('Рендер лидерборда...');
                     updateLeaderboard();
                     break;
                 case 'stats':
+                    console.log('Рендер статистики...');
                     updateStats();
                     break;
                 case 'pvp':
+                    console.log('Рендер PvP...');
                     renderPvpWorkers();
                     updateStamina();
                     break;
