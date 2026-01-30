@@ -1272,25 +1272,27 @@ function drawParticles(ctx, canvas) {
             gameData.pvp.battles++;
             if (playerWon) {
                 gameData.pvp.wins++;
-                showNotification(`🏆 Победа! ${battleState.selectedWorker.name} победил ${battleState.selectedBot.name}!`, 'success');
+                showNotification(`🏆 Победа! ${battleState.selectedWorker.name} победил ${battleState.bot.name}!`, 'success');
                 addBattleLogModal(`🏆 ${battleState.selectedWorker.name} победил!`);
                 
                 // Добавляем бота в коллекцию игрока
                 const botWorker = {
                     id: Date.now(),
-                    name: battleState.selectedBot.name,
-                    icon: battleState.selectedBot.icon,
-                    income: battleState.selectedBot.level * 10,
-                    level: battleState.selectedBot.level,
+                    name: battleState.bot.name,
+                    icon: battleState.bot.icon,
+                    income: battleState.bot.level * 10,
+                    level: battleState.bot.level,
                     experience: 0,
                     maxExperience: 100,
                     rarity: 'common',
                     style: 'normal'
                 };
                 gameData.workers.push(botWorker);
+                showNotification(`🎉 Получен рабочий: ${botWorker.name}!`, 'success');
+                renderWorkers();
             } else {
                 gameData.pvp.losses++;
-                showNotification(`💀 Поражение! ${battleState.selectedWorker.name} проиграл ${battleState.selectedBot.name}!`, 'error');
+                showNotification(`💀 Поражение! ${battleState.selectedWorker.name} проиграл ${battleState.bot.name}!`, 'error');
                 addBattleLogModal(`💀 ${battleState.selectedWorker.name} проиграл...`);
                 
                 // Удаляем рабочего
@@ -1402,7 +1404,9 @@ function drawParticles(ctx, canvas) {
             updateBattleUIModal();
             
             // Проверка победы
+            console.log(`ПРОВЕРКА ПОБЕДЫ: здоровье бота = ${battleState.botHealth}`);
             if (battleState.botHealth <= 0) {
+                console.log(`БОТ ПОБЕЖДЕН! Вызываю endBattleModal(true)`);
                 endBattleModal(true);
                 return;
             }
@@ -1449,7 +1453,9 @@ function drawParticles(ctx, canvas) {
             battleState.playerDefense = Math.max(0, battleState.playerDefense - 5);
             
             // Проверка поражения
+            console.log(`ПРОВЕРКА ПОРАЖЕНИЯ: здоровье игрока = ${battleState.playerHealth}`);
             if (battleState.playerHealth <= 0) {
+                console.log(`ИГРОК ПОБЕЖДЕН! Вызываю endBattleModal(false)`);
                 endBattleModal(false);
                 return;
             }
