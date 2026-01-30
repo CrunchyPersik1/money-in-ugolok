@@ -1172,13 +1172,13 @@ function drawParticles(ctx, canvas) {
             closeBtn.classList.add('battle-active');
             
             // Обновляем UI
-            document.getElementById('modalPlayerName').textContent = gameData.playerName;
+            document.getElementById('modalPlayerName').textContent = worker.name; // Имя рабочего, а не игрока
             document.getElementById('modalPlayerIcon').textContent = worker.icon;
             document.getElementById('modalPlayerWorkerName').textContent = worker.name;
             document.getElementById('modalPlayerAvatar').textContent = worker.icon;
             document.getElementById('modalPlayerFighterName').textContent = worker.name;
             
-            document.getElementById('modalBotName').textContent = 'Бот';
+            document.getElementById('modalBotName').textContent = bot.name; // Имя бота, а не "Бот"
             document.getElementById('modalBotIcon').textContent = bot.icon;
             document.getElementById('modalBotWorkerName').textContent = bot.name;
             document.getElementById('modalBotAvatar').textContent = bot.icon;
@@ -1463,16 +1463,25 @@ function drawParticles(ctx, canvas) {
         function updateBattleUIModal() {
             if (!battleState) return;
             
+            console.log(`=== ОБНОВЛЕНИЕ UI БИТВЫ ===`);
+            console.log(`Игрок HP: ${battleState.playerHealth}/${battleState.playerMaxHealth}`);
+            console.log(`Бот HP: ${battleState.botHealth}/${battleState.botMaxHealth}`);
+            
             // Здоровье игрока (рабочего)
             const playerHealthPercent = (battleState.playerHealth / battleState.playerMaxHealth) * 100;
             const playerHealthElement = document.getElementById('modalPlayerHealth');
             const playerHealthTextElement = document.getElementById('modalPlayerHealthText');
             
+            console.log(`Ищу элементы: modalPlayerHealth=${!!playerHealthElement}, modalPlayerHealthText=${!!playerHealthTextElement}`);
+            console.log(`Процент здоровья игрока: ${playerHealthPercent}%`);
+            
             if (playerHealthElement) {
                 playerHealthElement.style.width = playerHealthPercent + '%';
+                console.log(`Установил ширину health bar: ${playerHealthPercent}%`);
             }
             if (playerHealthTextElement) {
                 playerHealthTextElement.textContent = `${battleState.playerHealth}/${battleState.playerMaxHealth}`;
+                console.log(`Установил текст здоровья: ${battleState.playerHealth}/${battleState.playerMaxHealth}`);
             }
             
             // Здоровье бота
@@ -1480,11 +1489,16 @@ function drawParticles(ctx, canvas) {
             const botHealthElement = document.getElementById('modalBotHealth');
             const botHealthTextElement = document.getElementById('modalBotHealthText');
             
+            console.log(`Процент здоровья бота: ${botHealthPercent}%`);
+            console.log(`Ищу элементы: modalBotHealth=${!!botHealthElement}, modalBotHealthText=${!!botHealthTextElement}`);
+            
             if (botHealthElement) {
                 botHealthElement.style.width = botHealthPercent + '%';
+                console.log(`Установил ширину health bar бота: ${botHealthPercent}%`);
             }
             if (botHealthTextElement) {
                 botHealthTextElement.textContent = `${battleState.botHealth}/${battleState.botMaxHealth}`;
+                console.log(`Установил текст здоровья бота: ${battleState.botHealth}/${battleState.botMaxHealth}`);
             }
             
             // Обновляем имена бойцов
