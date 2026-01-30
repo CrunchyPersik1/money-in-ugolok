@@ -1175,14 +1175,17 @@ function drawParticles(ctx, canvas) {
             document.getElementById('modalBotIcon').textContent = bot.icon;
             document.getElementById('modalBotWorkerName').textContent = bot.name;
             
-            // Показываем арены
-            document.getElementById('modalBattleArena').style.display = 'block';
-            document.getElementById('modalBattleControls').style.display = 'block';
-            document.getElementById('modalBattleLog').style.display = 'block';
+            // Показываем модальное окно
+            document.getElementById('pvpModal').classList.add('show');
             
             // Очищаем и обновляем UI
-            document.getElementById('modalBattleLog').innerHTML = '';
-            updateBattleUIModal();
+            const battleLog = document.getElementById('modalBattleLog');
+            if (battleLog) {
+                battleLog.innerHTML = '';
+                battleLog.style.display = 'block';
+            }
+            
+            // updateBattleUIModal(); // TODO: Создать эту функцию
             
             addBattleLogModal(`⚔️ Битва началась: ${worker.name} против ${bot.name}!`);
             addBattleLogModal(`📊 ${worker.name}: ${abilities.health} HP, ${abilities.attack} ATK, ${abilities.defense} DEF, ${abilities.magic} MAG`);
