@@ -3620,38 +3620,16 @@ v1.0.0 (2026-01-26)
 // Таймер опыта (глобальная функция)
 function startExperienceTimer() {
     setInterval(() => {
-        let experienceMultiplier = Math.min(getBuildingBonus('experienceMultiplier'), MAX_CITY_MULTIPLIER);
+        const experienceMultiplier = Math.min(getBuildingBonus('experienceMultiplier'), MAX_CITY_MULTIPLIER);
         
-        // Престиж бонус к опыту
-        if (prestigeData.prestigeUpgrades.includes('experience_boost')) {
-            experienceMultiplier *= 1.5; // +50% к скорости получения опыта
-        }
-        
-        if (gameData.workers.length > 0) {
-            console.log(`=== ОПЫТ ===`);
-            console.log(`Рабочих: ${gameData.workers.length}, множитель: ${experienceMultiplier}`);
-        }
-        
-        gameData.workers.forEach((worker, index) => {
-            // ВСЕ рабочие получают опыт, включая редких и эксклюзивных
-            const experienceGain = (worker.income / 10) * experienceMultiplier;
-            const oldExp = worker.experience;
-            worker.experience += experienceGain;
-            
-            if (gameData.workers.length > 0 && index < 3) { // Показываем только первых 3 рабочих
-                console.log(`${worker.name}: +${experienceGain.toFixed(2)} опыта (${oldExp} → ${worker.experience}/${worker.maxExperience})`);
-            }
-            
-            // Проверяем повышение уровня
-            if (worker.experience >= worker.maxExperience) {
-                worker.experience = worker.experience - worker.maxExperience;
-                worker.level++;
-                worker.maxExperience = Math.floor(worker.maxExperience * 1.5);
-                worker.income = Math.floor(worker.income * 1.2);
+        gameData.workers.forEach(worker => {
+            if (!worker.isRare && !worker.isSpecial) {
+                const experienceGain = (worker.income / 10) * experienceMultiplier;
+                worker.experience += experienceGain;
                 
-                showNotification(`🎉 ${worker.name} достиг ${worker.level} уровня!`, 'success');
-                updatePassiveIncome();
-                renderWorkers();
+                if (worker.experience >= worker.maxExperience) {
+                    worker.experience = worker.maxExperience;
+                }
             }
         });
         
@@ -3666,51 +3644,18 @@ function startExperienceTimer() {
 }
 
 // Пассивный доход (глобальная функция)
-let lastGameUpdate = 0;
 function startPassiveIncome() {
     setInterval(() => {
-        const now = Date.now();
-        if (now - lastGameUpdate < 50) return; // Обновляем не чаще 20 раз в секунду
-        lastGameUpdate = now;
-        
-        // Обновляем баланс с учетом бонусов
-        const totalWithBonus = Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND);
-        const incomeToAdd = totalWithBonus / 20; // Делим на 20 так как обновляем 20 раз в секунду
-        
-        // ВСЕГДА показываем лог если есть доход
-        if (gameData.totalIncomePerSecond > 0) {
-            console.log(`=== ДЕНЬГИ ===`);
-            console.log(`totalIncomePerSecond: ${gameData.totalIncomePerSecond}`);
-            console.log(`city.totalBonus: ${gameData.city.totalBonus}`);
-            console.log(`totalWithBonus: ${totalWithBonus}`);
-            console.log(`incomeToAdd: ${incomeToAdd}`);
-            console.log(`balance до: ${gameData.balance}`);
-        }
-        
-        gameData.balance += incomeToAdd;
-        
-        if (gameData.totalIncomePerSecond > 0) {
-            console.log(`balance после: ${gameData.balance}`);
-            console.log(`разница: ${incomeToAdd}`);
-        }
-        
-        // Обновляем UI только если нужно
+        const income = (Math.min(gameData.totalIncomePerSecond * gameData.city.totalBonus, MAX_INCOME_PER_SECOND)) / 10;
+        gameData.balance += income;
+        gameData.totalEarned += income;
         updateBalance();
-        updateIncomePerSecond();
-        
-        // Сохраняем игру реже
-        if (Math.random() < 0.01) { // 1% шанс каждое обновление
-            saveGame();
-        }
-    }, 50); // 20 FPS вместо 1000 для производительности
+    }, 100);
 }
 
 // Обновление пассивного дохода (глобальная функция)
 function updatePassiveIncome() {
     let totalIncome = 0;
-    
-    console.log(`=== Обновление дохода ===`);
-    console.log(`Рабочих: ${gameData.workers.length}`);
     
     gameData.workers.forEach(worker => {
         let workerIncome = worker.income;
@@ -3727,8 +3672,6 @@ function updatePassiveIncome() {
         workerIncome = workerIncome * globalMultiplier;
         
         totalIncome += workerIncome;
-        
-        console.log(`${worker.name}: ${worker.income} -> ${workerIncome.toFixed(2)}/сек`);
     });
     
     // Добавляем бонус от ракетки, если она в полете
@@ -3741,7 +3684,6 @@ function updatePassiveIncome() {
         }
         
         totalIncome = totalIncome * rocketBonus;
-        console.log(`Бонус ракетки: x${rocketBonus}`);
     }
     
     totalIncome = totalIncome * Math.min(gameData.city.totalBonus, MAX_CITY_MULTIPLIER);
@@ -3752,9 +3694,6 @@ function updatePassiveIncome() {
     }
     
     gameData.totalIncomePerSecond = Math.min(totalIncome, MAX_INCOME_PER_SECOND);
-    
-    console.log(`Итоговый доход: ${gameData.totalIncomePerSecond}/сек`);
-    console.log(`Баланс: ${gameData.balance}`);
     
     updateIncomePerSecond();
 }
