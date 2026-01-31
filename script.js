@@ -50,6 +50,20 @@
             version: "2.0" // Версия сохранения
         };
 
+        // Интервалы
+        let rocketFlightInterval = null;
+        let passiveIncomeInterval = null;
+        let staminaRegenInterval = null;
+        
+        // Выбранные рабочие
+        let selectedWorker = null;
+        let selectedPvpWorker = null;
+        let selectedRocketWorker = null;
+        let currentCase = null;
+        let isRouletteSpinning = false;
+        let rouletteItems = [];
+        let selectedReward = null;
+
         // Настройки игры
         let gameSettings = {
             theme: 'default',
@@ -2009,47 +2023,67 @@ function drawParticles(ctx, canvas) {
         function applyPrestigeUpgradeEffects() {
             // Применяются при старте игры и при покупке
         }
-        
-        // Сброс игры для престижа
-        function resetGame() {
-            gameData.balance = 1000;
-            gameData.workers = [];
-            gameData.openedCases = 0;
-            gameData.totalEarned = 0;
-            gameData.city = {
-                buildings: [],
-                totalBonus: 1.0
-            };
-            gameData.rocket.height = 0;
-            gameData.rocket.maxHeight = 0;
-            gameData.rocket.xp = 0;
-            gameData.rocket.worker = null;
-            gameData.rocket.isFlying = false;
-            gameData.achievements = [];
-            
-            // Применить престиж бонусы
-            if (prestigeData.prestigeUpgrades.includes('starting_workers')) {
-                // Добавить 3 начальных рабочих
-                for (let i = 0; i < 3; i++) {
-                    const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
-                    gameData.workers.push({
-                        id: Date.now() + i,
-                        name: randomWorker.name,
-                        icon: randomWorker.icon,
-                        income: randomWorker.income,
-                        level: 1,
-                        experience: 0,
-                        maxExperience: 100,
-                        rarity: randomWorker.rarity || 'common',
-                        style: randomWorker.style || 'normal'
-                    });
-                }
-            }
-        }
-        
+
+        // Рабочие
+        const workers = [
+            { id: 1, name: 'Барсик', icon: '🐱', income: 10, rarity: 'common' },
+            { id: 2, name: 'Мурзик', icon: '🐈', income: 15, rarity: 'common' },
+            { id: 3, name: 'Рыжик', icon: '🦁', income: 25, rarity: 'uncommon' },
+            { id: 4, name: 'Снежок', icon: '🐯', income: 40, rarity: 'uncommon' },
+            { id: 5, name: 'Бобик', icon: '🐕', income: 60, rarity: 'rare' },
+            { id: 6, name: 'Шарик', icon: '🦮', income: 100, rarity: 'rare' },
+            { id: 7, name: 'Тузик', icon: '🐺', income: 150, rarity: 'epic' },
+            { id: 8, name: 'Полкан', icon: '🦊', income: 250, rarity: 'epic' },
+            { id: 9, name: 'Астрал', icon: '🌟', income: 20000, rarity: 'legendary' },
+            { id: 10, name: 'Космос', icon: '🚀', income: 20000, rarity: 'legendary' },
+            // Премиум рабочие
+            { id: 11, name: 'fallportal', icon: '🌀', income: 3000, rarity: 'epic' },
+            { id: 12, name: 'garden', icon: '🌺', income: 3500, rarity: 'epic' },
+            { id: 13, name: 'welp', icon: '🐋', income: 4000, rarity: 'epic' },
+            { id: 14, name: 'StarOzl', icon: '⭐', income: 5000, rarity: 'legendary' },
+            { id: 15, name: 'ksentix56', icon: '🔷', income: 6000, rarity: 'legendary' },
+            { id: 16, name: 'susboy', icon: '🟢', income: 7000, rarity: 'legendary' },
+            { id: 17, name: 'H1NZER', icon: '🎯', income: 8000, rarity: 'legendary' },
+            { id: 18, name: 'пирацетам #', icon: '💊', income: 9000, rarity: 'legendary' },
+            { id: 19, name: 'Trimicry', icon: '🔮', income: 10000, rarity: 'legendary' },
+            { id: 20, name: 'hу₽ka', icon: '🦊', income: 12000, rarity: 'legendary' },
+            { id: 21, name: 'Freepstic', icon: '🎪', income: 15000, rarity: 'legendary' },
+            { id: 22, name: 'Kulsh', icon: '🌟', income: 18000, rarity: 'legendary' },
+            { id: 23, name: 'R e q i m | ILC', icon: '⚡', income: 20000, rarity: 'legendary' },
+            { id: 24, name: 'ShunyaCat', icon: '🐱', income: 25000, rarity: 'legendary' },
+            { id: 25, name: 'dervi02', icon: '🔥', income: 30000, rarity: 'legendary' },
+            { id: 26, name: 'SW4MP', icon: '🐊', income: 35000, rarity: 'legendary' },
+            { id: 27, name: 'Sonlinadj', icon: '🌙', income: 40000, rarity: 'legendary' },
+            { id: 28, name: 'ferchkk', icon: '⚔️', income: 45000, rarity: 'legendary' },
+            { id: 29, name: 'Лехарация', icon: '👑', income: 50000, rarity: 'legendary' },
+            { id: 30, name: 'Ванек дружелюбный', icon: '🤝', income: 55000, rarity: 'legendary' },
+            { id: 31, name: 'джейн', icon: '🌹', income: 60000, rarity: 'legendary' },
+            { id: 32, name: 'es1ink', icon: '🔗', income: 65000, rarity: 'legendary' },
+            { id: 33, name: 'h1onk', icon: '🎺', income: 70000, rarity: 'legendary' },
+            { id: 34, name: 'shipilya', icon: '🚢', income: 75000, rarity: 'legendary' },
+            { id: 35, name: 'nabibilya', icon: '🌊', income: 80000, rarity: 'legendary' },
+            { id: 36, name: 'пастернак¿', icon: '🌿', income: 85000, rarity: 'legendary' },
+            { id: 37, name: 'son x', icon: '☀️', income: 90000, rarity: 'legendary' },
+            { id: 38, name: 'amaasha', icon: '🎭', income: 95000, rarity: 'legendary' },
+            { id: 39, name: 'rusxolod', icon: '❄️', income: 97000, rarity: 'legendary' },
+            { id: 40, name: 'starlight shot', icon: '💫', income: 98000, rarity: 'legendary' },
+            { id: 41, name: 'lit energy', icon: '⚡', income: 99000, rarity: 'legendary' },
+            { id: 42, name: 'начальник', icon: '👔', income: 100000, rarity: 'legendary' },
+            { id: 43, name: 'rish soul', icon: '👻', income: 100000, rarity: 'legendary' },
+            { id: 44, name: 'yloness', icon: '🌌', income: 100000, rarity: 'legendary' }
+        ];
+
         // Система обновлений
-        const GAME_VERSION = "1.1.0";
+        const GAME_VERSION = "1.1.5";
         const UPDATE_LOG = `
+v1.1.5 (31.01.2026)
+🎁 НОВЫЕ ПРЕМИУМ КЕЙСЫ
+✨ Добавлено 7 новых кейсов со стоимостью от 20 млн до 100 млрд
+👷 Добавлено 33 новых премиум рабочих с доходом до 100к/сек
+💰 Повышен доход базовым рабочим Астрал и Космос до 20к/сек
+🚀 Исправлена система ракеты и выбора рабочих
+📦 Исправлена логика выпадения рабочих из кейсов
+
 v1.1.0 (30.01.2026)
 🎵 МУЗЫКАЛЬНЫЙ ПЛЕЕР С ВИЗУАЛИЗАТОРОМ
 ✨ Добавлен полноценный аудиоплеер с Web Audio API
@@ -2143,7 +2177,7 @@ v1.0.0 (2026-01-26)
         
         // Ограничения
         const MAX_CITY_MULTIPLIER = 100;
-        const MAX_INCOME_PER_SECOND = 1000000000;
+        const MAX_INCOME_PER_SECOND = 100000000000000; // 100 триллионов
         const ROCKET_MAX_HEIGHT = 1000000;
         const ROCKET_XP_MULTIPLIER = 10;
 
@@ -2268,16 +2302,6 @@ v1.0.0 (2026-01-26)
             { name: "WorkerLord", balance: 450000, workers: 5, income: 2400 },
             { name: "Newbie", balance: 120000, workers: 3, income: 1500 }
         ];
-
-        // Текущий выбранный рабочий
-        let selectedWorker = null;
-        let currentCase = null;
-        let isRouletteSpinning = false;
-        let rouletteItems = [];
-        
-        // Выбранный рабочий для PvP
-        let selectedPvpWorker = null;
-        let selectedReward = null;
 
         // Магазин
         let currentShopCategory = 'deals';
@@ -3251,6 +3275,112 @@ v1.0.0 (2026-01-26)
                     { type: 'ultimate', names: ["Все ультимативные персонажи"] },
                     { type: 'special', names: ["Секретный босс"], chance: 0.05 }
                 ]
+            },
+            {
+                id: 21,
+                name: "МИЛЛИОНЕРСКИЙ КЕЙС",
+                price: 20000000,
+                level: 21,
+                icon: "💵",
+                color: "#00FF00",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["fallportal", "garden", "welp"] },
+                    { type: 'coin', amount: 15000000, icon: '💰' },
+                    { type: 'coin', amount: 25000000, icon: '💰' },
+                    { type: 'premium', names: ["StarOzl", "ksentix56", "susboy"], chance: 0.7 }
+                ]
+            },
+            {
+                id: 22,
+                name: "ЭЛИТНЫЙ КЕЙС",
+                price: 50000000,
+                level: 22,
+                icon: "🏆",
+                color: "#FFD700",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["H1NZER", "пирацетам #", "Trimicry"] },
+                    { type: 'coin', amount: 30000000, icon: '💰' },
+                    { type: 'coin', amount: 50000000, icon: '💰' },
+                    { type: 'premium', names: ["hу₽ka", "Freepstic", "Kulsh"], chance: 0.8 }
+                ]
+            },
+            {
+                id: 23,
+                name: "ПРЕМИУМ КЕЙС",
+                price: 100000000,
+                level: 23,
+                icon: "💎",
+                color: "#00CED1",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["R e q i m | ILC", "ShunyaCat", "dervi02"] },
+                    { type: 'coin', amount: 75000000, icon: '💰' },
+                    { type: 'coin', amount: 125000000, icon: '💰' },
+                    { type: 'premium', names: ["SW4MP", "Sonlinadj", "ferchkk"], chance: 0.9 }
+                ]
+            },
+            {
+                id: 24,
+                name: "ЛЕГЕНДАРНЫЙ КЕЙС",
+                price: 500000000,
+                level: 24,
+                icon: "🌟",
+                color: "#FF1493",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["Лехарация", "Ванек дружелюбный", "джейн"] },
+                    { type: 'coin', amount: 250000000, icon: '💰' },
+                    { type: 'coin', amount: 500000000, icon: '💰' },
+                    { type: 'premium', names: ["es1ink", "h1onk", "shipilya"], chance: 0.95 }
+                ]
+            },
+            {
+                id: 25,
+                name: "МИФИЧЕСКИЙ КЕЙС",
+                price: 1000000000,
+                level: 25,
+                icon: "🔮",
+                color: "#9400D3",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["nabibilya", "пастернак¿", "son x"] },
+                    { type: 'coin', amount: 750000000, icon: '💰' },
+                    { type: 'coin', amount: 1500000000, icon: '💰' },
+                    { type: 'premium', names: ["amaasha", "rusxolod", "starlight shot"], chance: 0.98 }
+                ]
+            },
+            {
+                id: 26,
+                name: "БОЖЕСТВЕННЫЙ КЕЙС",
+                price: 10000000000,
+                level: 26,
+                icon: "👑",
+                color: "#FF4500",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["lit energy", "начальник", "rish soul"] },
+                    { type: 'coin', amount: 5000000000, icon: '💰' },
+                    { type: 'coin', amount: 10000000000, icon: '💰' },
+                    { type: 'divine', names: ["yloness"], chance: 0.99 }
+                ]
+            },
+            {
+                id: 27,
+                name: "КОСМИЧЕСКИЙ ВЛАДЫКА",
+                price: 100000000000,
+                level: 27,
+                icon: "🌌",
+                color: "#0000FF",
+                locked: false,
+                rewards: [
+                    { type: 'worker', names: ["Все премиум рабочие"] },
+                    { type: 'coin', amount: 50000000000, icon: '💰' },
+                    { type: 'coin', amount: 100000000000, icon: '💰' },
+                    { type: 'cosmic', names: ["Все легендарные рабочие"], chance: 1.0 },
+                    { type: 'divine', names: ["Все божественные рабочие"], chance: 0.5 }
+                ]
             }
         ];
 
@@ -4164,7 +4294,7 @@ function updateBalance() {
                 const workerCard = document.createElement('div');
                 workerCard.className = `rocket-worker-card ${isSelected ? 'selected' : ''} ${isInRocket ? 'in-rocket' : ''}`;
                 workerCard.onclick = () => {
-                    if (!isInRocket && !gameData.rocket.isFlying) {
+                    if (!gameData.rocket.isFlying) {
                         playSound('clickSound');
                         selectRocketWorker(worker);
                     }
@@ -4262,10 +4392,16 @@ function updateBalance() {
 
         // Запуск полета ракетки
         function startRocketFlight() {
+            console.log('startRocketFlight called');
             if (rocketFlightInterval) clearInterval(rocketFlightInterval);
             
             rocketFlightInterval = setInterval(() => {
-                if (!gameData.rocket.isFlying) return;
+                if (!gameData.rocket.isFlying) {
+                    console.log('Rocket not flying, skipping update');
+                    return;
+                }
+                
+                console.log('Updating rocket - height:', gameData.rocket.height);
                 
                 // Увеличиваем высоту
                 const heightGain = 100 + Math.random() * 200;
@@ -4304,27 +4440,43 @@ function updateBalance() {
         // Обновление интерфейса ракетки
         function updateRocketInterface() {
             // Обновляем высоту
-            document.getElementById('rocketHeight').textContent = formatNumber(Math.floor(gameData.rocket.height));
-            document.getElementById('currentHeight').textContent = formatNumber(Math.floor(gameData.rocket.height));
+            const rocketHeightEl = document.getElementById('rocketHeight');
+            const currentHeightEl = document.getElementById('currentHeight');
+            if (rocketHeightEl) rocketHeightEl.textContent = formatNumber(Math.floor(gameData.rocket.height));
+            if (currentHeightEl) currentHeightEl.textContent = formatNumber(Math.floor(gameData.rocket.height));
             
             // Обновляем XP
-            document.getElementById('rocketXp').textContent = formatNumber(Math.floor(gameData.rocket.xp));
+            const rocketXpEl = document.getElementById('rocketXp');
+            if (rocketXpEl) rocketXpEl.textContent = formatNumber(Math.floor(gameData.rocket.xp));
             
             // Обновляем множитель дохода
-            document.getElementById('flightIncome').textContent = `x${gameData.rocket.flightIncomeMultiplier.toFixed(1)}`;
+            const flightIncomeEl = document.getElementById('flightIncome');
+            if (flightIncomeEl) flightIncomeEl.textContent = `x${gameData.rocket.flightIncomeMultiplier.toFixed(1)}`;
             
             // Обновляем опасность
-            const dangerText = gameData.rocket.dangerLevel < 0.3 ? 'Низкая' : 
-                              gameData.rocket.dangerLevel < 0.7 ? 'Средняя' : 'Высокая';
-            document.getElementById('dangerLevel').textContent = dangerText;
-            document.getElementById('dangerText').textContent = dangerText;
+            const dangerTextEl = document.getElementById('dangerText');
+            if (dangerTextEl) {
+                const dangerPercent = Math.floor(gameData.rocket.dangerLevel * 100);
+                if (dangerPercent < 30) {
+                    dangerTextEl.textContent = 'Низкая';
+                } else if (dangerPercent < 60) {
+                    dangerTextEl.textContent = 'Средняя';
+                } else if (dangerPercent < 80) {
+                    dangerTextEl.textContent = 'Высокая';
+                } else {
+                    dangerTextEl.textContent = 'Критическая!';
+                }
+            }
             
-            // Обновляем позицию ракеты
-            const rocketShip = document.getElementById('rocketShip');
-            const maxVisualHeight = 350; // Максимальная визуальная высота
-            const heightPercent = Math.min(gameData.rocket.height / ROCKET_MAX_HEIGHT, 1);
-            const bottomPosition = 50 + (heightPercent * maxVisualHeight);
-            rocketShip.style.bottom = `${bottomPosition}px`;
+            // Обновляем информацию о выбранном рабочем
+            const selectedWorkerInfoEl = document.getElementById('selectedRocketWorkerInfo');
+            if (selectedWorkerInfoEl && gameData.rocket.worker) {
+                selectedWorkerInfoEl.innerHTML = `
+                    <div class="selected-worker-icon">${gameData.rocket.worker.icon}</div>
+                    <div class="selected-worker-name">${gameData.rocket.worker.name}</div>
+                    <div class="selected-worker-bonus">Доход: ${formatNumber(gameData.rocket.worker.income * gameData.rocket.flightIncomeMultiplier)}/сек</div>
+                `;
+            }
         }
 
         // Проверка на получение эксклюзивного рабочего
@@ -4845,6 +4997,9 @@ function updateBalance() {
                 return;
             }
 
+            // Показываем рекламу с 30% шансом
+            // showAdIfNeeded(0.3); // Удалено вместе с Yandex SDK
+
             currentCase = caseItem;
             isRouletteSpinning = false;
             selectedReward = null;
@@ -4906,9 +5061,9 @@ function updateBalance() {
                 } else if (reward.type === 'worker' || reward.type === 'rare' || reward.type === 'special' || 
                           reward.type === 'legendary' || reward.type === 'epic' || reward.type === 'mythic' ||
                           reward.type === 'cosmic' || reward.type === 'divine' || reward.type === 'exotic' ||
-                          reward.type === 'ultimate' || reward.type === 'beta-tester') {
+                          reward.type === 'ultimate' || reward.type === 'beta-tester' || reward.type === 'premium') {
                     reward.names.forEach(workerName => {
-                        const workerInfo = workerNames.find(w => w.name === workerName);
+                        const workerInfo = workers.find(w => w.name === workerName);
                         if (workerInfo) {
                             allPossibleRewards.push({
                                 type: 'worker',
@@ -5048,7 +5203,7 @@ function updateBalance() {
                     if (workerRewards.length > 0) {
                         const reward = workerRewards[Math.floor(Math.random() * workerRewards.length)];
                         const workerName = reward.names[Math.floor(Math.random() * reward.names.length)];
-                        const workerInfo = workerNames.find(w => w.name === workerName);
+                        const workerInfo = workers.find(w => w.name === workerName);
                         finalReward = {
                             type: 'worker',
                             name: workerInfo.name,
@@ -5069,7 +5224,7 @@ function updateBalance() {
                 } else {
                     const reward = rewards[Math.floor(Math.random() * rewards.length)];
                     const workerName = reward.names[Math.floor(Math.random() * reward.names.length)];
-                    const workerInfo = workerNames.find(w => w.name === workerName);
+                    const workerInfo = workers.find(w => w.name === workerName);
                     finalReward = {
                         type: 'worker',
                         name: workerInfo.name,
@@ -5335,10 +5490,10 @@ function updateBalance() {
                 } else if (reward.type === 'worker' || reward.type === 'rare' || reward.type === 'special' || 
                           reward.type === 'legendary' || reward.type === 'epic' || reward.type === 'mythic' ||
                           reward.type === 'cosmic' || reward.type === 'divine' || reward.type === 'exotic' ||
-                          reward.type === 'ultimate' || reward.type === 'beta-tester') {
+                          reward.type === 'ultimate' || reward.type === 'beta-tester' || reward.type === 'premium') {
                     if (reward.names) {
                         reward.names.forEach(name => {
-                            const workerInfo = workerNames.find(w => w.name === name);
+                            const workerInfo = workers.find(w => w.name === name);
                             if (workerInfo) {
                                 allRewards.push({
                                     type: 'worker',
@@ -6173,10 +6328,11 @@ function updateBalance() {
             input.click();
         }
 
-        // Сброс игры
-        function resetGame() {
+        // Полный сброс игры
+        function fullResetGame() {
             if (confirm('Вы уверены, что хотите сбросить весь прогресс? Это действие нельзя отменить!')) {
                 localStorage.removeItem('cornerEarningSave');
+                localStorage.removeItem('prestigeSave');
                 location.reload();
             }
         }
