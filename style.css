@@ -2647,10 +2647,72 @@ body::before {
     border-radius: 12px;
 }
 
+.player-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.player-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    object-fit: cover;
+}
+
+.player-avatar-fallback {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.player-name-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.player-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-customization-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.3s;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.profile-customization-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
 .player-name, .bot-name {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
+}
+
+.player-title {
+    font-weight: 600;
+    color: #FFD700;
+    font-size: 0.9rem;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
 
 .player-worker, .bot-worker {
@@ -3319,8 +3381,40 @@ body::before {
 
 .shop-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+}
+
+.shop-avatar-section {
     padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.shop-avatar-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.shop-avatar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.shop-avatar-icon {
+    font-size: 1.5rem;
 }
 
 .shop-scroll-container {

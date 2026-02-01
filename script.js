@@ -46,6 +46,12 @@
             shop: {
                 purchasedItems: []
             },
+            profile: {
+                nicknameColor: '#ffffff',
+                avatar: 1, // ID аватарки (1-2 доступны по умолчанию)
+                title: '', // Титул игрока
+                unlockedAvatars: [1, 2] // Разблокированные аватарки
+            },
             achievements: [],
             version: "2.0" // Версия сохранения
         };
@@ -2024,6 +2030,224 @@ function drawParticles(ctx, canvas) {
             // Применяются при старте игры и при покупке
         }
 
+        // Модальное окно кастомизации профиля
+        function showProfileCustomization() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+                    border-radius: 20px;
+                    padding: 2rem;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h2 style="margin: 0; color: #00ffff; font-size: 1.8rem;">🎨 ПЕРСОНАЛИЗАЦИЯ</h2>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">×</button>
+                    </div>
+                    
+                    <div style="padding: 1.5rem 0;">
+                        <!-- Цвет ника -->
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="color: #fff; margin-bottom: 1rem;">🎨 Цвет ника</h3>
+                            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                                ${availableColors.map(color => `
+                                    <button onclick="changeNicknameColor('${color}')" style="
+                                        width: 40px;
+                                        height: 40px;
+                                        border-radius: 50%;
+                                        background: ${color};
+                                        border: 3px solid ${gameData.profile.nicknameColor === color ? '#00ffff' : 'transparent'};
+                                        cursor: pointer;
+                                        transition: all 0.3s;
+                                    " title="Выбрать цвет"></button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Аватарки -->
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="color: #fff; margin-bottom: 1rem;">👤 Аватарка</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                ${availableAvatars.map(avatar => {
+                                    const isUnlocked = gameData.profile.unlockedAvatars.includes(avatar.id);
+                                    return `
+                                    <div onclick="${isUnlocked ? `changeAvatar(${avatar.id})` : 'showNotification(\"Эта аватарка заблокирована!\", \"warning\")'}" style="
+                                        width: 80px;
+                                        height: 80px;
+                                        border-radius: 10px;
+                                        background: ${isUnlocked ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#333'};
+                                        border: 3px solid ${gameData.profile.avatar === avatar.id ? '#00ffff' : 'transparent'};
+                                        cursor: ${isUnlocked ? 'pointer' : 'not-allowed'};
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        transition: all 0.3s;
+                                        position: relative;
+                                    ">
+                                        ${isUnlocked ? 
+                                            `<img src="avas/${avatar.file}" style="width: 60px; height: 60px; border-radius: 5px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div style="display: none; color: #fff; font-size: 2rem;">👤</div>` :
+                                            `<div style="color: #666; font-size: 2rem;">🔒</div>`
+                                        }
+                                        ${!isUnlocked ? '<div style="position: absolute; bottom: -5px; right: -5px; background: #ff4444; color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center;">🔒</div>' : ''}
+                                    </div>
+                                `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Титулы -->
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="color: #fff; margin-bottom: 1rem;">👑 Титулы</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                ${availableTitles.map(title => {
+                                    const isUnlocked = title.type === 'achievement' ? 
+                                        gameData.achievements.includes(title.achievementId) : 
+                                        gameData.shop.purchasedItems.includes(title.id);
+                                    
+                                    return `
+                                        <div onclick="${isUnlocked ? `changeTitle('${title.id}')` : title.type === 'shop' ? `buyTitle('${title.id}', ${title.price})` : 'showNotification(\"Титул заблокирован!\", \"warning\")'}" style="
+                                            padding: 10px;
+                                            border-radius: 10px;
+                                            background: ${isUnlocked ? 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)' : title.type === 'shop' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : '#333'};
+                                            border: 3px solid ${gameData.profile.title === title.id ? '#00ffff' : 'transparent'};
+                                            cursor: ${isUnlocked || title.type === 'shop' ? 'pointer' : 'not-allowed'};
+                                            text-align: center;
+                                            transition: all 0.3s;
+                                        ">
+                                            <div style="color: #fff; font-weight: bold;">${title.name}</div>
+                                            ${!isUnlocked && title.type === 'shop' ? `<div style="color: #fff; font-size: 0.8rem;">💎 ${title.price} шардов</div>` : ''}
+                                            ${!isUnlocked && title.type === 'achievement' ? `<div style="color: #666; font-size: 0.8rem;">🏆 За достижение</div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Предпросмотр -->
+                        <div style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <h4 style="color: #fff; margin-bottom: 0.5rem;">Предпросмотр:</h4>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="avas/number_${gameData.profile.avatar}.png" style="width: 40px; height: 40px; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="display: none; width: 40px; height: 40px; border-radius: 50%; background: #666; display: flex; align-items: center; justify-content: center; color: #fff;">👤</div>
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <span style="color: ${gameData.profile.nicknameColor}; font-weight: bold; font-size: 1.2rem;">
+                                        ${gameData.playerName}
+                                    </span>
+                                    <span style="color: #FFD700; font-weight: 600; font-size: 0.9rem;">
+                                        ${availableTitles.find(t => t.id === gameData.profile.title)?.name || ''}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Функции для изменения профиля
+        function changeNicknameColor(color) {
+            gameData.profile.nicknameColor = color;
+            updateProfileDisplay();
+            saveGame();
+            showNotification('Цвет ника изменен!', 'success');
+            showProfileCustomization(); // Обновить модальное окно
+        }
+
+        function changeAvatar(avatarId) {
+            // Проверяем разблокирована ли аватарка
+            if (!gameData.profile.unlockedAvatars.includes(avatarId)) {
+                showNotification('Эта аватарка не разблокирована!', 'error');
+                return;
+            }
+            
+            gameData.profile.avatar = avatarId;
+            updateProfileDisplay();
+            saveGame();
+            showNotification('Аватарка изменена!', 'success');
+            showProfileCustomization(); // Обновить модальное окно
+        }
+
+        function changeTitle(titleId) {
+            gameData.profile.title = titleId;
+            updateProfileDisplay();
+            saveGame();
+            showNotification('Титул изменен!', 'success');
+            showProfileCustomization(); // Обновить модальное окно
+        }
+
+        function buyTitle(titleId, price) {
+            if (gameData.shards < price) {
+                showNotification('Недостаточно шардов!', 'error');
+                return;
+            }
+            
+            if (gameData.shop.purchasedItems.includes(titleId)) {
+                showNotification('Этот титул уже куплен!', 'warning');
+                return;
+            }
+            
+            gameData.shards -= price;
+            gameData.shop.purchasedItems.push(titleId);
+            updateBalance();
+            saveGame();
+            showNotification('Титул куплен!', 'success');
+            showProfileCustomization(); // Обновить модальное окно
+        }
+
+        function updateProfileDisplay() {
+            // Обновляем аватарку
+            const avatarElement = document.getElementById('playerAvatar');
+            const avatar = availableAvatars.find(a => a.id === gameData.profile.avatar);
+            if (avatar && avatarElement) {
+                avatarElement.src = `avas/${avatar.file}`;
+            }
+            
+            // Обновляем отображение ника
+            const playerNameElement = document.getElementById('playerNameDisplay');
+            if (playerNameElement) {
+                playerNameElement.style.color = gameData.profile.nicknameColor;
+                playerNameElement.textContent = gameData.playerName;
+            }
+            
+            // Обновляем отображение титула
+            const titleElement = document.getElementById('playerTitleDisplay');
+            if (titleElement) {
+                const title = availableTitles.find(t => t.id === gameData.profile.title);
+                titleElement.textContent = title ? title.name : '';
+            }
+            
+            // Обновляем все остальные элементы с классом player-name
+            const playerNameElements = document.querySelectorAll('.player-name');
+            playerNameElements.forEach(el => {
+                if (el.id !== 'playerNameDisplay') {
+                    el.style.color = gameData.profile.nicknameColor;
+                    const title = availableTitles.find(t => t.id === gameData.profile.title);
+                    el.textContent = `${title ? `[${title.name}] ` : ''}${gameData.playerName}`;
+                }
+            });
+        }
+
         // Рабочие
         const workers = [
             { id: 1, name: 'Барсик', icon: '🐱', income: 10, rarity: 'common' },
@@ -2073,9 +2297,47 @@ function drawParticles(ctx, canvas) {
             { id: 44, name: 'yloness', icon: '🌌', income: 100000, rarity: 'legendary' }
         ];
 
+        // Кастомизация профиля
+        const availableTitles = [
+            { id: 'el_macho', name: 'Эль Мачо', price: 100, type: 'shop' },
+            { id: 'grass_toucher', name: 'Трогаю траву', price: 150, type: 'shop' },
+            { id: 'one_of_a_kind', name: 'Один такой', price: 200, type: 'shop' },
+            { id: 'corner_president', name: 'Президент уголка', price: 300, type: 'shop' },
+            { id: 'money_maker', name: 'Делаем деньги', price: 250, type: 'shop' },
+            { id: 'case_master', name: 'Мастер кейсов', price: 400, type: 'shop' },
+            { id: 'rocket_pilot', name: 'Пилот ракеты', price: 350, type: 'shop' },
+            { id: 'boss_title', name: 'Начальник', price: 0, type: 'special' }, // Из акции
+            { id: 'first_steps', name: 'Первые шаги', price: 0, type: 'achievement', achievementId: 1 },
+            { id: 'rich_man', name: 'Богач', price: 0, type: 'achievement', achievementId: 2 },
+            { id: 'legend', name: 'Легенда', price: 0, type: 'achievement', achievementId: 3 }
+        ];
+
+        const availableColors = [
+            '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00',
+            '#ff00ff', '#00ffff', '#ffa500', '#800080', '#ffc0cb',
+            '#008000', '#000080', '#800000', '#808080', '#ffd700'
+        ];
+
+        const availableAvatars = [
+            { id: 1, file: 'number_1.png', unlocked: true },
+            { id: 2, file: 'number_2.png', unlocked: true },
+            { id: 3, file: 'number_3.png', unlocked: false }, // Акция
+            { id: 4, file: 'number_4.png', unlocked: false }, // Магазин
+            { id: 5, file: 'number_5.png', unlocked: false } // Магазин
+        ];
+
         // Система обновлений
-        const GAME_VERSION = "1.1.5";
+        const GAME_VERSION = "1.1.7";
         const UPDATE_LOG = `
+v1.1.7 (31.01.2026)
+🎨 СИСТЕМА ПЕРСОНАЛИЗАЦИИ ПРОФИЛЯ
+✨ Добавлена возможность менять цвет ника (15 цветов)
+👤 Добавлены аватарки (2 доступны по умолчанию, 1 в акции, 1 в магазине)
+👑 Добавлена система титулов (10 титулов: 3 за достижения, 7 в магазине)
+💎 Титулы покупаются за шарды в магазине
+🎁 Акция "Персонализация!" - титул "Начальник" + аватарка №3 + 10 млн монет за 50 шардов
+🖱️ Кнопка персонализации рядом с ником игрока
+
 v1.1.5 (31.01.2026)
 🎁 НОВЫЕ ПРЕМИУМ КЕЙСЫ
 ✨ Добавлено 7 новых кейсов со стоимостью от 20 млн до 100 млрд
@@ -2310,6 +2572,16 @@ v1.0.0 (2026-01-26)
         const shopItems = {
             deals: [
                 {
+                    id: 'personalization_deal',
+                    title: 'ПЕРСОНАЛИЗАЦИЯ!',
+                    badge: 'ЭКСКЛЮЗИВ',
+                    description: 'Титул "Начальник" + Аватарка №3 + 10,000,000 монет',
+                    price: 50,
+                    priceType: 'shards',
+                    type: 'deal',
+                    action: () => purchasePersonalizationDeal()
+                },
+                {
                     id: 'new_currency_deal',
                     title: 'НОВАЯ ВАЛЮТА!',
                     badge: 'ОГРАНИЧЕННО',
@@ -2417,18 +2689,17 @@ v1.0.0 (2026-01-26)
                 {
                     id: 'shard_pack_1',
                     title: 'Малый пакет Шардов',
-                    description: '1 Шард за 1,000,000 монет',
-                    price: 1000000,
+                    description: 'Получить 2 Шарда',
+                    price: 500000,
                     priceType: 'money',
                     type: 'shards',
-                    action: () => purchaseShardPack(1)
+                    action: () => purchaseShardPack(2)
                 },
                 {
-                    id: 'shard_pack_5',
-                    title: 'Средний пакет Шардов',
-                    badge: 'ЭКОНОМИЯ',
-                    description: '5 Шардов за 4,500,000 монет',
-                    price: 4500000,
+                    id: 'shard_pack_2',
+                    title: 'Большой пакет Шардов',
+                    description: 'Получить 5 Шардов',
+                    price: 1000000,
                     priceType: 'money',
                     type: 'shards',
                     action: () => purchaseShardPack(5)
@@ -2457,6 +2728,122 @@ v1.0.0 (2026-01-26)
         };
 
         // Функции магазина
+        function openAvatarShop() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+                    border-radius: 20px;
+                    padding: 2rem;
+                    max-width: 700px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h2 style="margin: 0; color: #00ffff; font-size: 1.8rem;">👤 МАГАЗИН АВАТАРОК</h2>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">×</button>
+                    </div>
+                    
+                    <div style="padding: 1.5rem 0;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                            ${availableAvatars.map(avatar => {
+                                const isUnlocked = gameData.profile.unlockedAvatars.includes(avatar.id);
+                                const price = avatar.id === 3 ? 50 : avatar.id === 4 ? 100 : avatar.id === 5 ? 150 : 0;
+                                const canBuy = avatar.id === 3 || avatar.id === 4 || avatar.id === 5;
+                                
+                                return `
+                                    <div style="
+                                        padding: 1.5rem;
+                                        border-radius: 15px;
+                                        background: ${isUnlocked ? 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+                                        border: 3px solid ${gameData.profile.avatar === avatar.id ? '#00ffff' : 'transparent'};
+                                        text-align: center;
+                                        cursor: ${isUnlocked ? 'pointer' : canBuy ? 'pointer' : 'not-allowed'};
+                                        transition: all 0.3s;
+                                        position: relative;
+                                    " onclick="${isUnlocked ? `selectAvatar(${avatar.id})` : canBuy ? `buyAvatar(${avatar.id}, ${price})` : ''}">
+                                        <div style="width: 80px; height: 80px; margin: 0 auto 1rem; border-radius: 50%; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center;">
+                                            ${isUnlocked ? 
+                                                `<img src="avas/${avatar.file}" style="width: 60px; height: 60px; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div style="display: none; color: #fff; font-size: 2rem;">👤</div>` :
+                                                `<div style="color: #fff; font-size: 2rem;">🔒</div>`
+                                            }
+                                        </div>
+                                        <div style="color: #fff; font-weight: bold; margin-bottom: 0.5rem;">Аватарка №${avatar.id}</div>
+                                        ${!isUnlocked && canBuy ? `<div style="color: #fff; font-size: 0.9rem;">💎 ${price} шардов</div>` : ''}
+                                        ${!isUnlocked && !canBuy ? '<div style="color: #666; font-size: 0.8rem;">Недоступно</div>' : ''}
+                                        ${isUnlocked && gameData.profile.avatar === avatar.id ? '<div style="position: absolute; top: -10px; right: -10px; background: #00ffff; color: #000; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>' : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                            <h4 style="color: #fff; margin-bottom: 0.5rem;">Ваши шарды:</h4>
+                            <div style="color: #ffd700; font-size: 1.5rem; font-weight: bold;">💎 ${gameData.shards}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            playSound('clickSound');
+        }
+
+        function selectAvatar(avatarId) {
+            gameData.profile.avatar = avatarId;
+            updateProfileDisplay();
+            saveGame();
+            showNotification('Аватарка выбрана!', 'success');
+            document.querySelector('div[style*="position: fixed"]').remove();
+        }
+
+        function buyAvatar(avatarId, price) {
+            if (gameData.shards < price) {
+                showNotification('Недостаточно шардов!', 'error');
+                return;
+            }
+            
+            gameData.shards -= price;
+            
+            // Добавляем аватарку в разблокированные
+            if (!gameData.profile.unlockedAvatars.includes(avatarId)) {
+                gameData.profile.unlockedAvatars.push(avatarId);
+            }
+            
+            // Находим аватарку и разблокируем её
+            const avatar = availableAvatars.find(a => a.id === avatarId);
+            if (avatar) {
+                avatar.unlocked = true;
+            }
+            
+            // Выбираем купленную аватарку
+            gameData.profile.avatar = avatarId;
+            
+            updateBalance();
+            updateProfileDisplay();
+            saveGame();
+            
+            showNotification(`🎨 Аватарка №${avatarId} куплена и выбрана!`, 'success');
+            document.querySelector('div[style*="position: fixed"]').remove();
+        }
+
         function openShop() {
             document.getElementById('shopModal').classList.add('show');
             updateShopBalance();
@@ -2709,6 +3096,82 @@ v1.0.0 (2026-01-26)
             gameData.workers.push(matteo);
             showNotification('🧪 Получен эксклюзивный Маттеокеллер!', 'success');
             renderWorkers();
+        }
+
+        // Покупка акции персонализации
+        function purchasePersonalizationDeal() {
+            if (gameData.shards < 50) {
+                showNotification('Недостаточно шардов!', 'error');
+                return;
+            }
+            
+            gameData.shards -= 50;
+            
+            // Добавляем титул "Начальник"
+            if (!gameData.shop.purchasedItems.includes('boss_title')) {
+                gameData.shop.purchasedItems.push('boss_title');
+            }
+            gameData.profile.title = 'boss_title';
+            
+            // Разблокируем аватарку №3 через функцию purchaseAvatar
+            const avatar3 = availableAvatars.find(a => a.id === 3);
+            if (avatar3 && !avatar3.unlocked) {
+                avatar3.unlocked = true;
+                gameData.profile.avatar = 3;
+                
+                // Сохраняем разблокированную аватарку в gameData
+                if (!gameData.profile.unlockedAvatars.includes(3)) {
+                    gameData.profile.unlockedAvatars.push(3);
+                }
+            }
+            
+            // Добавляем монеты
+            gameData.balance += 10000000;
+            gameData.totalEarned += 10000000;
+            
+            updateBalance();
+            updateProfileDisplay();
+            saveGame();
+            
+            showNotification('🎨 Акция "Персонализация!" куплена! Получены: титул "Начальник", аватарка №3, 10,000,000 монет!', 'success');
+            closeShop();
+        }
+
+        // Покупка аватарки
+        function purchaseAvatar(avatarId) {
+            const avatar = availableAvatars.find(a => a.id === avatarId);
+            if (!avatar) {
+                showNotification('Аватарка не найдена!', 'error');
+                return;
+            }
+            
+            if (avatar.unlocked) {
+                showNotification('Эта аватарка уже разблокирована!', 'warning');
+                return;
+            }
+            
+            const price = avatarId === 3 ? 50 : 100; // Аватарка 3 за 50 шардов (акция), 4 за 100 шардов
+            
+            if (gameData.shards < price) {
+                showNotification('Недостаточно шардов!', 'error');
+                return;
+            }
+            
+            gameData.shards -= price;
+            avatar.unlocked = true;
+            gameData.profile.avatar = avatarId;
+            
+            // Сохраняем разблокированную аватарку в gameData
+            if (!gameData.profile.unlockedAvatars.includes(avatarId)) {
+                gameData.profile.unlockedAvatars.push(avatarId);
+            }
+            
+            updateBalance();
+            updateProfileDisplay();
+            saveGame();
+            
+            showNotification(`🎨 Аватарка №${avatarId} разблокирована!`, 'success');
+            closeShop();
         }
 
         function findShopItem(itemId) {
@@ -4126,6 +4589,7 @@ function updateBalance() {
         // Инициализация игры
         function initGame() {
             updateBalance();
+            updateProfileDisplay();
             renderCases();
             loadGame();
             loadSettings();
@@ -6192,12 +6656,23 @@ function updateBalance() {
                                 unlocked: false,
                                 stamina: 30,
                                 maxStamina: 30,
-                                lastStaminaReset: Date.now(),
-                                selectedWorker: null,
-                                battles: 0,
                                 wins: 0,
-                                losses: 0
+                                losses: 0,
+                                streak: 0
                             };
+                            if (!gameData.profile) gameData.profile = {
+                                nicknameColor: '#ffffff',
+                                avatar: 1,
+                                title: '',
+                                unlockedAvatars: [1, 2]
+                            };
+                            if (!gameData.profile.unlockedAvatars) gameData.profile.unlockedAvatars = [1, 2];
+                            
+                            // Восстанавливаем состояние разблокировки аватарок
+                            gameData.profile.unlockedAvatars.forEach(avatarId => {
+                                const avatar = availableAvatars.find(a => a.id === avatarId);
+                                if (avatar) avatar.unlocked = true;
+                            });
                             
                             // Инициализация Шардов и магазина
                             if (!gameData.shards) gameData.shards = 0;
@@ -6326,6 +6801,67 @@ function updateBalance() {
             };
             
             input.click();
+        }
+
+        // Сброс игры (для престижа)
+        function resetGame() {
+            // Сохраняем профиль и шарды
+            const savedProfile = gameData.profile;
+            const savedShards = gameData.shards;
+            const savedShop = gameData.shop;
+            const playerName = gameData.playerName;
+            
+            // Сбрасываем основные игровые данные
+            gameData.balance = 1000;
+            gameData.workers = [];
+            gameData.openedCases = 0;
+            gameData.totalEarned = 0;
+            gameData.city = {
+                buildings: [],
+                totalBonus: 1.0,
+                totalBonusPercent: 0
+            };
+            gameData.rocket = {
+                height: 0,
+                maxHeight: 0,
+                xp: 0,
+                worker: null,
+                isFlying: false,
+                launchTime: null,
+                dangerLevel: 0,
+                flightIncomeMultiplier: 1.0,
+                baseCrashChance: 0.01,
+                crashes: 0,
+                exclusiveWorkers: []
+            };
+            gameData.pvp = {
+                unlocked: false,
+                stamina: 30,
+                maxStamina: 30,
+                wins: 0,
+                losses: 0,
+                streak: 0
+            };
+            gameData.achievements = [];
+            
+            // Восстанавливаем профиль и шарды
+            gameData.profile = savedProfile;
+            gameData.shards = savedShards;
+            gameData.shop = savedShop;
+            gameData.playerName = playerName;
+            
+            // Обновляем интерфейс
+            updateBalance();
+            updateProfileDisplay();
+            renderCases();
+            renderWorkers();
+            renderRocketWorkers();
+            updatePassiveIncome();
+            renderUpgrades();
+            updateStats();
+            updatePrestigeUI();
+            
+            saveGame();
         }
 
         // Полный сброс игры
@@ -6459,11 +6995,20 @@ function updateBalance() {
                 gameData.rocket.worker = null;
                 gameData.rocket.isFlying = false;
                 gameData.achievements = [];
+                gameData.shards = 0;
+                gameData.shop = { purchasedItems: [] };
+                gameData.profile = {
+                    nicknameColor: '#ffffff',
+                    avatar: 1,
+                    title: '',
+                    unlockedAvatars: [1, 2]
+                };
                 saveGame();
             }
             
             // Обновляем интерфейс
             updateBalance();
+            updateProfileDisplay();
             renderCases();
             renderWorkers();
             renderRocketWorkers();

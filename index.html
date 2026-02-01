@@ -100,7 +100,17 @@
                     <span data-translate="gameTitle">Заработок в Уголке</span>
                 </div>
             <div class="player-info">
-                <div class="player-name" id="playerNameDisplay" data-translate="playerName">Игрок</div>
+                <div class="player-profile">
+                    <img class="player-avatar" id="playerAvatar" src="avas/number_1.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-fallback" style="display: none;">👤</div>
+                    <div class="player-name-section">
+                        <div class="player-name-container">
+                            <div class="player-name" id="playerNameDisplay" data-translate="playerName">Игрок</div>
+                            <button class="profile-customization-btn" onclick="showProfileCustomization()" title="Персонализация профиля">🎨</button>
+                        </div>
+                        <div class="player-title" id="playerTitleDisplay"></div>
+                    </div>
+                </div>
                 <div class="balance-container">
                     <div class="balance">
                         <div class="balance-particles" id="balanceParticles"></div>
@@ -519,6 +529,12 @@
             </div>
             
             <div class="shop-content">
+                <div class="shop-avatar-section">
+                    <button class="shop-avatar-btn" onclick="openAvatarShop()">
+                        <span class="shop-avatar-icon">👤</span>
+                        <span>АВАТАРКИ</span>
+                    </button>
+                </div>
                 <div class="shop-scroll-container" id="shopScrollContainer">
                     <!-- Контент будет генерироваться динамически -->
                 </div>
