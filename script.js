@@ -1812,9 +1812,11 @@ function drawParticles(ctx, canvas) {
         // Обновить UI престижа
         function updatePrestigeUI() {
             const prestigeButton = document.getElementById('prestigeButton');
+            const prestigeButtonSettings = document.getElementById('prestigeButtonSettings');
             const prestigeCost = calculatePrestigeCost();
             const kaiCoins = calculateKaiCoins();
             
+            // Обновляем старую кнопку если она существует
             if (prestigeButton) {
                 prestigeButton.innerHTML = `
                     <div class="prestige-icon">⭐</div>
@@ -1834,10 +1836,35 @@ function drawParticles(ctx, canvas) {
                 prestigeButton.classList.toggle('prestige-available', gameData.balance >= prestigeCost);
             }
             
-            // Обновить отображение кайкоинов
+            // Обновляем кнопку в настройках
+            if (prestigeButtonSettings) {
+                prestigeButtonSettings.innerHTML = `
+                    <div class="prestige-icon-settings">⭐</div>
+                    <div class="prestige-info-settings">
+                        <div class="prestige-title-settings">Престиж</div>
+                        <div class="prestige-cost-settings">
+                            ${gameData.balance >= prestigeCost ? 
+                                `<span style="color: #4ade80;">Доступно!</span>` : 
+                                `Нужно: ${formatNumber(prestigeCost)}`
+                            }
+                        </div>
+                        <div class="prestige-reward-settings">Награда: ${kaiCoins} кайкоинов</div>
+                    </div>
+                `;
+                
+                prestigeButtonSettings.disabled = gameData.balance < prestigeCost;
+            }
+            
+            // Обновить отображение кайкоинов (старое)
             const kaiCoinsDisplay = document.getElementById('kaiCoinsDisplay');
             if (kaiCoinsDisplay) {
                 kaiCoinsDisplay.textContent = prestigeData.kaiCoins;
+            }
+            
+            // Обновить отображение кайкоинов в настройках
+            const kaiCoinsDisplaySettings = document.getElementById('kaiCoinsDisplaySettings');
+            if (kaiCoinsDisplaySettings) {
+                kaiCoinsDisplaySettings.textContent = prestigeData.kaiCoins;
             }
         }
         

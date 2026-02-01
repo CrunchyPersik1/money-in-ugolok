@@ -544,33 +544,12 @@
 
     <audio id="audioPlayer"></audio>
 
-    <!-- Кнопка престижа -->
-    <div class="prestige-container">
-        <button class="prestige-button" id="prestigeButton" onclick="performPrestige()">
-            <div class="prestige-icon">⭐</div>
-            <div class="prestige-info">
-                <div class="prestige-title">Престиж</div>
-                <div class="prestige-cost">Нужно: 50,000,000</div>
-                <div class="prestige-reward">Награда: 1 кайкоинов</div>
-            </div>
-        </button>
-        <div class="kai-coins-display">
-            <span class="kai-coins-icon">💰</span>
-            <span class="kai-coins-amount" id="kaiCoinsDisplay">0</span>
-            <span class="kai-coins-label">кайкоинов</span>
-        </div>
-        <button class="prestige-shop-button" onclick="showPrestigeShop()">
-            <i class="fas fa-store"></i>
-        </button>
-    </div>
-
-    <!-- Доход в секунду -->
+    <!-- Кнопка настроек -->
     <div class="income-display">
         <span>💎</span>
         <span>+<span id="incomePerSecond">0</span>/сек</span>
     </div>
 
-    <!-- Кнопка настроек -->
     <div class="settings-button" onclick="openSettings()">
         <i class="fas fa-cog"></i>
     </div>
@@ -680,6 +659,32 @@
                             <span>Звуковые эффекты</span>
                         </label>
                     </div>
+                </div>
+                
+                <!-- Престиж -->
+                <div class="settings-section">
+                    <div class="section-title">
+                        <i class="fas fa-star"></i>
+                        <span>Престиж</span>
+                    </div>
+                    <div class="prestige-info-settings">
+                        <div class="kai-coins-display-settings">
+                            <div class="kai-coins-icon-settings">🪙</div>
+                            <span class="kai-coins-amount-settings" id="kaiCoinsDisplaySettings">0</span>
+                            <span class="kai-coins-label-settings">кайкоинов</span>
+                        </div>
+                        <button class="prestige-shop-button-settings" onclick="showPrestigeShop()">
+                            <i class="fas fa-store"></i>
+                        </button>
+                    </div>
+                    <button class="prestige-button-settings" id="prestigeButtonSettings" onclick="performPrestige()">
+                        <div class="prestige-icon-settings">⭐</div>
+                        <div class="prestige-info-settings">
+                            <div class="prestige-title-settings">Престиж</div>
+                            <div class="prestige-cost-settings" id="prestigeCostSettings">Нужно: 50,000,000</div>
+                            <div class="prestige-reward-settings" id="prestigeRewardSettings">Награда: 1 кайкоинов</div>
+                        </div>
+                    </button>
                 </div>
                 
                 <!-- Сохранение -->
